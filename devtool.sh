@@ -11,7 +11,11 @@ FLAG_OVERWRITE=0
 function HELP(){
     echo "usage:"
     echo "$0 new <OPENWRT_DIR> <PKG_NAME>"
+    echo "    => New prpl sample plugin package"
+    echo ""
     echo "$0 modify <OPENWRT_PKG_DIR>"
+    echo "    => Modify existed package"
+    echo ""
     exit 1
 }
 
