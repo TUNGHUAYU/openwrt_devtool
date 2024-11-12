@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FLAG_OVERWRITE=0
-
+VERSION="v0.1.0"
 
 ###
 # FUNCTION
@@ -9,7 +9,8 @@ FLAG_OVERWRITE=0
 
 
 function HELP(){
-    echo "usage:"
+    echo "version:${VERSION}"
+    echo ""
     echo "$0 new <OPENWRT_DIR> <PKG_NAME>"
     echo "    => New prpl sample plugin package"
     echo ""
@@ -139,6 +140,9 @@ function FUNC_register_local_feed(){
         echo "Activate feed -> \"src-link ${FEED_NAME}\""
         sed -i "/src-link ${FEED_NAME}/ c\\${feed_expr}" feeds.conf
     fi
+
+    ./scripts/feeds update ${FEED_NAME}
+    ./scripts/feeds install -p ${FEED_NAME} ${PKG_NAME}
     
     cd - > /dev/null
 }
