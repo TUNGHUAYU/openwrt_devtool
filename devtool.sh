@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FLAG_OVERWRITE=0
-VERSION="v1.0.0"
+VERSION="1.0.1"
 
 ###
 # FUNCTION
@@ -9,7 +9,7 @@ VERSION="v1.0.0"
 
 
 function HELP(){
-    echo "version:${VERSION}"
+    echo "version:v${VERSION}"
     echo ""
     echo "$0 new <OPENWRT_DIR> <PKG_NAME>"
     echo "    => New prpl sample plugin package"
