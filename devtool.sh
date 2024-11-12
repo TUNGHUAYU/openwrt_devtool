@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FLAG_OVERWRITE=0
-VERSION="v0.1.0"
+VERSION="v1.0.0"
 
 ###
 # FUNCTION
