@@ -71,7 +71,7 @@ function FUNC_create_new_source(){
     FUNC_create_folder "${PKG_SRC_DIR}"
 
     cd "${PKG_SRC_DIR}"
-    git archive --remote="${REMOTE_URL}" dev-method-impl | tar -x
+    git archive --remote="${REMOTE_URL}" main | tar -x
 
     # convert content "demo" to "${PKG_NAME}"
     {
