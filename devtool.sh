@@ -48,7 +48,7 @@ function FUNC_create_new_feed(){
     cd "${PKG_FEED_DIR}"
     git archive --remote="${FEED_MAKEFILE_URL}" main | tar -x
     sed -n "s#<pkg-name>#${PKG_NAME}#p"                                Makefile
-    sed -n "s#<repo-branch>#${REPO_BRANCH}#p"                          Makefile
+    sed -n "s#<repo-branch>#dev#p"                                     Makefile
     sed -n "s#<local-repo-url>#${PKG_SRC_DIR}#p"                       Makefile
     sed -n "s#<category>#${CATEGORY}#p"                                Makefile
     sed -n "s#<submenu>#${SUBMENU}#p"                                  Makefile
@@ -56,7 +56,7 @@ function FUNC_create_new_feed(){
     sed -n "s#<description>#${DESCRIPTION}#p"                          Makefile
     
     sed -i "s#<pkg-name>#${PKG_NAME}#g"                                Makefile
-    sed -i "s#<repo-branch>#${REPO_BRANCH}#g"                          Makefile
+    sed -i "s#<repo-branch>#dev#g"                                     Makefile
     sed -i "s#<local-repo-url>#${PKG_SRC_DIR}#g"                       Makefile
     sed -i "s#<category>#${CATEGORY}#g"                                Makefile
     sed -i "s#<submenu>#${SUBMENU}#g"                                  Makefile
@@ -122,6 +122,7 @@ function FUNC_create_new_source(){
     git init
     git add . 
     git commit -m "first commit"
+    git checkout -b dev
     
     cd - > /dev/null
 }
