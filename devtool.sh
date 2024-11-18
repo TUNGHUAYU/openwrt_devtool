@@ -11,12 +11,23 @@ VERSION="1.0.1"
 function HELP(){
     echo "version:v${VERSION}"
     echo ""
+    echo "# New prpl sample plugin package"
     echo "$0 new <OPENWRT_DIR> <PKG_NAME>"
-    echo "    => New prpl sample plugin package"
     echo ""
+    echo "# Modify existed package"
     echo "$0 modify <OPENWRT_PKG_DIR>"
-    echo "    => Modify existed package"
     echo ""
+    echo "
+    --------------------------------------------------
+    Input Argument Illustration
+    --------------------------------------------------
+    openwrt/                    <--- <OPENWRT_DIR>
+        package/
+            .../
+                <pkg>/          <--- <OPENWRT_PKG_DIR>
+                    Makefile
+    --------------------------------------------------
+    "
     exit 1
 }
 
