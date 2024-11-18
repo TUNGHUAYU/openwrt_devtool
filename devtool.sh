@@ -174,6 +174,25 @@ function FUNC_run_new_package_process(){
     FUNC_register_local_feed
 }
 
+
+function FUNC_symlink_modify_makefile(){
+    FUNC_is_folder_existed "${PKG_MK_DIR}"
+    FUNC_create_folder     "${PKG_MK_DIR}"
+
+    # Move to ${PKG_MK_DIR}
+    cd ${PKG_MK_DIR}
+
+    # Backup/Restore package original Makefile
+    if [[ ! -e ${OPENWRT_PKG_DIR}/.Makefile.origin ]]; then
+        cp ${OPENWRT_PKG_DIR}/Makefile ${OPENWRT_PKG_DIR}/.Makefile.origin
+    fi
+
+    # Create symlink
+    rm ${OPENWRT_PKG_DIR}/Makefile
+    cp ${OPENWRT_PKG_DIR}/.Makefile.origin ${PKG_MK_DIR}/Makefile
+    ln -sf ${PKG_MK_DIR}/Makefile ${OPENWRT_PKG_DIR}/Makefile
+}
+
 function FUNC_convert_git_url(){
     local url=$1
 
@@ -186,36 +205,27 @@ function FUNC_convert_git_url(){
 
 }
 
-function FUNC_create_source(){
+function FUNC_create_modify_source(){
     FUNC_is_folder_existed "${PKG_SRC_DIR}"
     FUNC_create_folder "${PKG_SRC_DIR}"
    
-    # Restore Makefile content when overwrite situation
-    if [[ $FLAG_OVERWRITE == "1" ]]; then
-        cp ${OPENWRT_PKG_DIR}/.Makefile.origin ${OPENWRT_PKG_DIR}/Makefile
-        rm ${OPENWRT_PKG_DIR}/.Makefile.origin
-    fi
-
     cd ${PKG_SRC_DIR}
 
     local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
     local pkg_version=$(    sed -E -n "s#.?PKG_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile    )
 
     echo "pkg_source_url=${pkg_source_url}"
-    
     FUNC_convert_git_url ${pkg_source_url}
 
     echo "git clone ${PKG_SOURCE_URL_GIT}"
-
     git clone ${PKG_SOURCE_URL_GIT} .
     git checkout -b dev ${pkg_version}
 }
 
 function FUNC_redirect_src_pkg_url(){
 
-    cd ${OPENWRT_PKG_DIR}
+    cd ${PKG_MK_DIR}
 
-    cp Makefile .Makefile.origin
     sed -i "/^PKG_SOURCE_URL/ s/^/# /"                                  Makefile
     sed -i "/^PKG_SOURCE:=/ s/^/# /"                                    Makefile
     sed -i "/^PKG_HASH:=/ s/^/# /"                                      Makefile
@@ -236,10 +246,11 @@ function FUNC_run_modify_package_process(){
 
     WORKSPACE="$(pwd)/workspace"
     PKG_NAME=${OPENWRT_PKG_DIR##*/}
+    PKG_MK_DIR="${WORKSPACE}/PACKAGES/${PKG_NAME}"
     PKG_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
 
-
-    FUNC_create_source
+    FUNC_symlink_modify_makefile
+    FUNC_create_modify_source
     FUNC_redirect_src_pkg_url
 }
 
