@@ -42,14 +42,14 @@ function FUNC_create_folder(){
 }
 
 function FUNC_create_new_feed(){
-    FUNC_is_folder_existed "${PKG_FEED_DIR}"
-    FUNC_create_folder "${PKG_FEED_DIR}"
+    FUNC_is_folder_existed "${WORKSPACE_FEED_PKG_DIR}"
+    FUNC_create_folder "${WORKSPACE_FEED_PKG_DIR}"
 
-    cd "${PKG_FEED_DIR}"
+    cd "${WORKSPACE_FEED_PKG_DIR}"
     git archive --remote="${FEED_MAKEFILE_URL}" main | tar -x
     sed -n "s#<pkg-name>#${PKG_NAME}#p"                                Makefile
     sed -n "s#<repo-branch>#dev#p"                                     Makefile
-    sed -n "s#<local-repo-url>#${PKG_SRC_DIR}#p"                       Makefile
+    sed -n "s#<local-repo-url>#${WORKSPACE_SRC_DIR}#p"                 Makefile
     sed -n "s#<category>#${CATEGORY}#p"                                Makefile
     sed -n "s#<submenu>#${SUBMENU}#p"                                  Makefile
     sed -n "s#<title>#${TITLE}#p"                                      Makefile
@@ -57,7 +57,7 @@ function FUNC_create_new_feed(){
     
     sed -i "s#<pkg-name>#${PKG_NAME}#g"                                Makefile
     sed -i "s#<repo-branch>#dev#g"                                     Makefile
-    sed -i "s#<local-repo-url>#${PKG_SRC_DIR}#g"                       Makefile
+    sed -i "s#<local-repo-url>#${WORKSPACE_SRC_DIR}#g"                 Makefile
     sed -i "s#<category>#${CATEGORY}#g"                                Makefile
     sed -i "s#<submenu>#${SUBMENU}#g"                                  Makefile
     sed -i "s#<title>#${TITLE}#g"                                      Makefile
@@ -67,10 +67,10 @@ function FUNC_create_new_feed(){
 }
 
 function FUNC_create_new_source(){
-    FUNC_is_folder_existed "${PKG_SRC_DIR}"
-    FUNC_create_folder "${PKG_SRC_DIR}"
+    FUNC_is_folder_existed "${WORKSPACE_SRC_DIR}"
+    FUNC_create_folder "${WORKSPACE_SRC_DIR}"
 
-    cd "${PKG_SRC_DIR}"
+    cd "${WORKSPACE_SRC_DIR}"
     git archive --remote="${REMOTE_URL}" main | tar -x
 
     # convert content "demo" to "${PKG_NAME}"
@@ -131,7 +131,7 @@ function FUNC_register_local_feed(){
     # openwrt 
     cd ${OPENWRT_DIR}
     
-    feed_expr="src-link ${FEED_NAME} ${FEED_DIR}"
+    feed_expr="src-link ${FEED_NAME} ${WORKSPACE_FEED_DIR}"
     
     ret=$(grep "src-link ${FEED_NAME}" feeds.conf)
     if [[ -z $ret ]]; then
@@ -157,9 +157,9 @@ function FUNC_run_new_package_process(){
     FEED_NAME="feed_dev_pkg"
 
     WORKSPACE="$(pwd)/workspace"
-    PKG_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
-    FEED_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}"
-    PKG_FEED_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}/${PKG_NAME}"
+    WORKSPACE_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
+    WORKSPACE_FEED_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}"
+    WORKSPACE_FEED_PKG_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}/${PKG_NAME}"
 
     REPO_BRANCH="main"
     CATEGORY="pkg-dev"
@@ -176,11 +176,11 @@ function FUNC_run_new_package_process(){
 
 
 function FUNC_symlink_modify_makefile(){
-    FUNC_is_folder_existed "${PKG_MK_DIR}"
-    FUNC_create_folder     "${PKG_MK_DIR}"
+    FUNC_is_folder_existed "${WORKSPACE_PKG_DIR}"
+    FUNC_create_folder     "${WORKSPACE_PKG_DIR}"
 
-    # Move to ${PKG_MK_DIR}
-    cd ${PKG_MK_DIR}
+    # Move to ${WORKSPACE_PKG_DIR}
+    cd ${WORKSPACE_PKG_DIR}
 
     # Backup/Restore package original Makefile
     if [[ ! -e ${OPENWRT_PKG_DIR}/.Makefile.origin ]]; then
@@ -189,8 +189,8 @@ function FUNC_symlink_modify_makefile(){
 
     # Create symlink
     rm ${OPENWRT_PKG_DIR}/Makefile
-    cp ${OPENWRT_PKG_DIR}/.Makefile.origin ${PKG_MK_DIR}/Makefile
-    ln -sf ${PKG_MK_DIR}/Makefile ${OPENWRT_PKG_DIR}/Makefile
+    cp ${OPENWRT_PKG_DIR}/.Makefile.origin ${WORKSPACE_PKG_DIR}/Makefile
+    ln -sf ${WORKSPACE_PKG_DIR}/Makefile ${OPENWRT_PKG_DIR}/Makefile
 }
 
 function FUNC_convert_git_url(){
@@ -206,10 +206,10 @@ function FUNC_convert_git_url(){
 }
 
 function FUNC_create_modify_source(){
-    FUNC_is_folder_existed "${PKG_SRC_DIR}"
-    FUNC_create_folder "${PKG_SRC_DIR}"
+    FUNC_is_folder_existed "${WORKSPACE_SRC_DIR}"
+    FUNC_create_folder "${WORKSPACE_SRC_DIR}"
    
-    cd ${PKG_SRC_DIR}
+    cd ${WORKSPACE_SRC_DIR}
 
     local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
     local pkg_version=$(    sed -E -n "s#.?PKG_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile    )
@@ -224,7 +224,7 @@ function FUNC_create_modify_source(){
 
 function FUNC_redirect_src_pkg_url(){
 
-    cd ${PKG_MK_DIR}
+    cd ${WORKSPACE_PKG_DIR}
 
     sed -i "/^PKG_SOURCE_URL/ s/^/# /"                                  Makefile
     sed -i "/^PKG_SOURCE:=/ s/^/# /"                                    Makefile
@@ -234,7 +234,7 @@ function FUNC_redirect_src_pkg_url(){
     sed -i "/^PKG_LICENSE_FILES:=/ s/^/# /"                             Makefile
     sed -i "/^PKG_RELEASE:=/ s/^/# /"                                   Makefile
 
-    sed -i "/^# PKG_SOURCE_URL/ a PKG_SOURCE_URL:=file://${PKG_SRC_DIR}" Makefile
+    sed -i "/^# PKG_SOURCE_URL/ a PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}" Makefile
     sed -i "/^PKG_SOURCE_URL/ a PKG_SOURCE_PROTO:=git"                   Makefile
     sed -i "/^PKG_SOURCE_URL/ a PKG_SOURCE_VERSION:=dev"                 Makefile
 }
@@ -246,8 +246,9 @@ function FUNC_run_modify_package_process(){
 
     WORKSPACE="$(pwd)/workspace"
     PKG_NAME=${OPENWRT_PKG_DIR##*/}
-    PKG_MK_DIR="${WORKSPACE}/PACKAGES/${PKG_NAME}"
-    PKG_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
+    PKG_PATH=${OPENWRT_PKG_DIR##*package/}
+    WORKSPACE_PKG_DIR="${WORKSPACE}/PACKAGES/${PKG_PATH}"
+    WORKSPACE_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
 
     FUNC_symlink_modify_makefile
     FUNC_create_modify_source
@@ -268,7 +269,7 @@ case "${SUB_COMMAND}" in
             HELP
             exit 1
         fi
-        OPENWRT_DIR=$(realpath $2)
+        OPENWRT_DIR=$(realpath -s $2)
         PKG_NAME=$3
         FUNC_run_new_package_process ${SUB_COMMAND} ${OPENWRT_DIR} ${PKG_NAME}
         ;;
@@ -278,7 +279,7 @@ case "${SUB_COMMAND}" in
             HELP
             exit 1
         fi
-        OPENWRT_PKG_DIR=$(realpath $2)
+        OPENWRT_PKG_DIR=$(realpath -s $2)
         FUNC_run_modify_package_process ${SUB_COMMAND} ${OPENWRT_PKG_DIR}
         ;;
     *)
