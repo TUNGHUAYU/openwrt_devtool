@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FLAG_OVERWRITE=0
-VERSION="1.0.1"
+VERSION="1.1.0"
 
 ###
 # FUNCTION
@@ -17,6 +17,12 @@ function HELP(){
     echo "# Modify existed package"
     echo "$0 modify <OPENWRT_PKG_DIR>"
     echo ""
+    echo "# List all developping package"
+    echo "$0 list"
+    echo ""
+    echo "# Abort developping package"
+    echo "$0 abort <PKG_NAME>"
+
     echo "
     --------------------------------------------------
     Input Argument Illustration
