@@ -2,7 +2,7 @@
 
 > author: Terry Yu ( terry_yu@arcadyan.com.tw )
 >
-> version: v1.0.1
+> version: v1.2.0
 
 
 Please contact with me or leave question in the below confluence page
@@ -11,14 +11,18 @@ Please contact with me or leave question in the below confluence page
 
 ## Usage
 
-### New package ( prpl plugin )
 ``` bash
-    $ bash devtool.sh add ${OPENWRT_DIR} ${PKG_NAME}
-```
+    # List all developing packages
+    $ bash devtool.sh list
 
-### Modify existed package 
-``` bash 
+    # New package ( prpl plugin )
+    $ bash devtool.sh add ${OPENWRT_DIR} ${PKG_NAME}
+
+    # Modify existed package 
     $ bash devtool.sh modify ${OPENWRT_PKG_DIR}
+
+    # Abort the developing package
+    $ bash devtool.sh abort ${OPENWRT_DIR} ${PKG_NAME} 
 ```
 
 

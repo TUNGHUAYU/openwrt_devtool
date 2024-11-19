@@ -3,6 +3,11 @@ please see the [confluence
 page](https://arc-conf.arcadyan.com.tw/pages/viewpage.action?spaceKey=TERRYYU&title=Orange+-+openwrt-devtool) to know
 the details
 
+v1.2.0:
+- Add
+    - feature
+        - list : List all developed packages
+        - abort: Abort the specified developed package
 
 v1.1.0:
 - Improve
