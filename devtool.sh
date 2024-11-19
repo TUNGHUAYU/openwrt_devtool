@@ -13,18 +13,16 @@ function HELP(){
     local shell_name=${0##*/}
 
     echo "version:v${VERSION}"
-    echo ""
-    echo "# New prpl sample plugin package"
-    echo "$0 new <OPENWRT_DIR> <PKG_NAME>"
-    echo ""
-    echo "# Modify existed package"
-    echo "$0 modify <OPENWRT_PKG_DIR>"
-    echo ""
-    echo "# List all developping package"
-    echo "$0 list"
-    echo ""
-    echo "# Abort developping package"
-    echo "$0 abort <OPENWRT_DIR> <PKG_NAME>"
+    echo " 
+    --------------------------------------------------
+    Usage
+    --------------------------------------------------
+    $0 list
+    $0 new    <OPENWRT_DIR> <PKG_NAME>
+    $0 modify <OPENWRT_PKG_DIR>
+    $0 abort  <OPENWRT_DIR> <PKG_NAME>
+    --------------------------------------------------
+    "
 
     echo "
     --------------------------------------------------
@@ -42,11 +40,12 @@ function HELP(){
     --------------------------------------------------
     WORKSPACE Layout
     --------------------------------------------------
-    devtool.sh        <--- <SHELL_PATH> ${SHELL_PATH}              
-    workspace/        <--- <WORKSPACE_DIR> ${WORKSPACE_DIR}
-        FEEDS/
-        PACKAGES/
-        SOURCES/
+    <WORKSPACE_DIR>/      <--- ${ROOT_WORKSPACE_DIR}
+        devtool.sh             
+        workspace/             
+            FEEDS/
+            PACKAGES/
+            SOURCES/
     --------------------------------------------------
     "
     
@@ -450,6 +449,7 @@ function FUNC_run_abort_dev_package_process(){
 
 PKG_TYPE="none"
 SHELL_PATH=$(realpath $0)
+ROOT_WORKSPACE_DIR="${SHELL_PATH%/*}"
 WORKSPACE_DIR="${SHELL_PATH%/*}/workspace"
 SUB_COMMAND=$1
 
