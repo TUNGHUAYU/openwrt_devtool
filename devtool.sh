@@ -9,6 +9,9 @@ VERSION="1.1.0"
 
 
 function HELP(){
+
+    local shell_name=${0##*/}
+
     echo "version:v${VERSION}"
     echo ""
     echo "# New prpl sample plugin package"
@@ -21,11 +24,11 @@ function HELP(){
     echo "$0 list"
     echo ""
     echo "# Abort developping package"
-    echo "$0 abort <PKG_NAME>"
+    echo "$0 abort <OPENWRT_DIR> <PKG_NAME>"
 
     echo "
     --------------------------------------------------
-    Input Argument Illustration
+    OpenWRT Layout
     --------------------------------------------------
     openwrt/                    <--- <OPENWRT_DIR>
         package/
@@ -34,6 +37,19 @@ function HELP(){
                     Makefile
     --------------------------------------------------
     "
+
+    echo "
+    --------------------------------------------------
+    WORKSPACE Layout
+    --------------------------------------------------
+    devtool.sh        <--- <SHELL_PATH> ${SHELL_PATH}              
+    workspace/        <--- <WORKSPACE_DIR> ${WORKSPACE_DIR}
+        FEEDS/
+        PACKAGES/
+        SOURCES/
+    --------------------------------------------------
+    "
+    
     exit 1
 }
 
@@ -57,6 +73,27 @@ function FUNC_create_folder(){
     echo "Create folder \"${DIR}\""
     mkdir -p ${DIR}
 }
+
+function FUNC_get_new_pkg_list(){
+    local new_pkg_list=""
+    new_pkg_list=$(find ${WORKSPACE_DIR}/FEEDS/feed_dev_pkg/ -mindepth 1 -type d)
+
+    # export to global variable 
+    NEW_PKG_LIST="${new_pkg_list}"
+}
+
+
+function FUNC_get_mod_pkg_list(){
+    local mod_pkg_list=""
+    mod_pkg_makefile_list=$(find ${WORKSPACE_DIR}/PACKAGES/ -iname makefile -type f)
+    mod_pkg_list=${mod_pkg_makefile_list//\/Makefile}
+
+    # export to global variable
+    MOD_PKG_LIST="${mod_pkg_list}"
+}
+
+
+# ---------- NEW PACKAGE PROCESS (BEGIN) ----------
 
 function FUNC_create_new_feed(){
     FUNC_is_folder_existed "${WORKSPACE_FEED_PKG_DIR}"
@@ -173,10 +210,9 @@ function FUNC_run_new_package_process(){
     
     FEED_NAME="feed_dev_pkg"
 
-    WORKSPACE="$(pwd)/workspace"
-    WORKSPACE_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
-    WORKSPACE_FEED_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}"
-    WORKSPACE_FEED_PKG_DIR="${WORKSPACE}/FEEDS/${FEED_NAME}/${PKG_NAME}"
+    WORKSPACE_SRC_DIR="${WORKSPACE_DIR}/SOURCES/${PKG_NAME}"
+    WORKSPACE_FEED_DIR="${WORKSPACE_DIR}/FEEDS/${FEED_NAME}"
+    WORKSPACE_FEED_PKG_DIR="${WORKSPACE_DIR}/FEEDS/${FEED_NAME}/${PKG_NAME}"
 
     REPO_BRANCH="main"
     CATEGORY="pkg-dev"
@@ -191,6 +227,7 @@ function FUNC_run_new_package_process(){
     FUNC_register_local_feed
 }
 
+# ---------- MODIFY PACKAGE PROCESS (BEGIN) ----------
 
 function FUNC_symlink_modify_makefile(){
     FUNC_is_folder_existed "${WORKSPACE_PKG_DIR}"
@@ -261,23 +298,163 @@ function FUNC_run_modify_package_process(){
     SUB_COMMAND=$1
     OPENWRT_PKG_DIR=$2
 
-    WORKSPACE="$(pwd)/workspace"
     PKG_NAME=${OPENWRT_PKG_DIR##*/}
     PKG_PATH=${OPENWRT_PKG_DIR##*package/}
-    WORKSPACE_PKG_DIR="${WORKSPACE}/PACKAGES/${PKG_PATH}"
-    WORKSPACE_SRC_DIR="${WORKSPACE}/SOURCES/${PKG_NAME}"
+    WORKSPACE_PKG_DIR="${WORKSPACE_DIR}/PACKAGES/${PKG_PATH}"
+    WORKSPACE_SRC_DIR="${WORKSPACE_DIR}/SOURCES/${PKG_NAME}"
 
     FUNC_symlink_modify_makefile
     FUNC_create_modify_source
     FUNC_redirect_src_pkg_url
 }
 
+# ---------- LIST DEVELOPED PACKAGE PROCESS (BEGIN) ----------
+
+function FUNC_run_list_dev_package_process(){
+    
+    SUB_COMMAND=$1
+
+    local count=0
+    local type=""
+    local format="|%-03s|%-30s|%-10s|%-50s \n"
+    local _format="|%-03d|%-30s|%-10s|%-50s \n"
+    printf "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
+    printf "${format}" "---" "--------" "----" "-------"
+
+    for p in ${NEW_PKG_LIST}
+    do
+        type="new"
+        count=$(( count + 1 ))
+        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p}"
+    done
+
+    for p in ${MOD_PKG_LIST}
+    do
+        type="modify"
+        count=$(( count + 1 ))
+        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p}"
+    done
+
+
+}
+
+
+# ---------- ABORT DEVELOPED PACKAGE PROCESS (BEGIN) ----------
+
+function FUNC_check_pkg_devloping(){
+    local pkg_name=""
+    echo $pkg_name
+
+    # check if package is in ${NEW_PKG_LIST}
+    for p in ${NEW_PKG_LIST}
+    do
+        pkg_name=${p##*/}
+        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
+            PKG_TYPE="new"
+            return
+        fi
+    done
+
+    # check if package is in ${MOD_PKG_LIST}
+    for p in ${MOD_PKG_LIST}
+    do
+        pkg_name=${p##*/}
+        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
+            PKG_TYPE="modify"
+            return
+        fi
+    done
+}
+
+
+
+function FUNC_abort_new_pkg_work(){
+    echo "do ${FUNCNAME[0]}"
+    # 1. remove "<openwrt>/build_dir/../<pkg>/"
+    path=$(find ${OPENWRT_DIR}/build_dir/target-*/ -maxdepth 1 -name "${PKG_NAME}*" -type d)
+    echo "rm -rf $path"
+    rm -rf $path
+    # 2. uninstall "<openwrt>/package/.../<pkg>"
+    path=$(find ${OPENWRT_DIR}/package/ -name "${PKG_NAME}")
+    echo "cd ${OPENWRT_DIR}"
+    cd ${OPENWRT_DIR}
+    echo "./scripts/feeds uninstall ${PKG_NAME}"
+    ./scripts/feeds uninstall ${PKG_NAME}
+    # 3. remove "<workspace>/SOURCES/<pkg>/"
+    path=$(find ${WORKSPACE_DIR}/SOURCES/ -maxdepth 1 -name "${PKG_NAME}" -type d)
+    echo "rm -rf $path"
+    rm -rf  $path
+    # 4. remove "<workspace>/FEEDS/feed_dev_pkg/<pkg>"
+    path=$(find ${WORKSPACE_DIR}/FEEDS/ -name "${PKG_NAME}" -type d)
+    echo "rm -rf $path"
+    rm -rf $path
+}
+
+function FUNC_abort_mod_pkg_work(){
+    echo "do ${FUNCNAME[0]}"
+
+    local path=""
+
+    # 1. remove "<openwrt>/build_dir/../<pkg>/"
+    path=$(find ${OPENWRT_DIR}/build_dir/target-*/ -maxdepth 1 -name "${PKG_NAME}*" -type d)
+    echo "rm -rf $path"
+    rm -rf $path
+    # 2. restore package openwrt-Makefile via ".Makefile.origin"
+    path=$(find ${OPENWRT_DIR}/package/ -name "${PKG_NAME}")
+    echo "rm $path/Makefile"
+    echo "cp $path/.Makefile.origin $path/Makefile"
+    echo "rm $path/.Makefile.origin"
+    rm $path/Makefile
+    cp $path/.Makefile.origin $path/Makefile
+    rm $path/.Makefile.origin
+    # 3. remove "<workspace>/SOURCES/<pkg>"
+    path=$(find ${WORKSPACE_DIR}/SOURCES/ -maxdepth 1 -name "${PKG_NAME}" -type d)
+    echo "rm -rf $path"
+    rm -rf $path
+    # 4. remove "<workspace>/PACKAGES/.../<pkg>"
+    path=$(find ${WORKSPACE_DIR}/PACKAGES/ -name "${PKG_NAME}" -type d)
+    echo "rm -rf $path"
+    rm -rf $path
+}
+
+function FUNC_run_abort_dev_package_process(){
+
+    SUB_COMMAND=$1
+    OPENWRT_DIR=$2
+    PKG_NAME=$3
+
+    # Check if package name is legal
+    FUNC_check_pkg_devloping
+
+    # 
+    case "${PKG_TYPE}" in
+        new )
+            # abort new type package
+            FUNC_abort_new_pkg_work
+            ;;
+        modify )
+            # abort modify type package
+            FUNC_abort_mod_pkg_work
+            ;;
+        * )
+            echo "abort ... ${FUNCNAME[0]}"
+            exit 2
+            ;;
+    esac
+
+}
 
 ###
 # MAIN
 ###
 
+PKG_TYPE="none"
+SHELL_PATH=$(realpath $0)
+WORKSPACE_DIR="${SHELL_PATH%/*}/workspace"
 SUB_COMMAND=$1
+
+FUNC_get_new_pkg_list
+FUNC_get_mod_pkg_list
 
 case "${SUB_COMMAND}" in
     new )
@@ -286,7 +463,7 @@ case "${SUB_COMMAND}" in
             HELP
             exit 1
         fi
-        OPENWRT_DIR=$(realpath -s $2)
+        OPENWRT_DIR=$(realpath $2)
         PKG_NAME=$3
         FUNC_run_new_package_process ${SUB_COMMAND} ${OPENWRT_DIR} ${PKG_NAME}
         ;;
@@ -298,6 +475,24 @@ case "${SUB_COMMAND}" in
         fi
         OPENWRT_PKG_DIR=$(realpath -s $2)
         FUNC_run_modify_package_process ${SUB_COMMAND} ${OPENWRT_PKG_DIR}
+        ;;
+    list )
+        echo "list developed packages"
+        if [[ $# != 1 ]]; then
+            HELP
+            exit 1
+        fi
+        FUNC_run_list_dev_package_process ${SUB_COMMAND}
+        ;;
+    abort )
+        echo "abort developed package"
+        if [[ $# != 3 ]]; then
+            HELP
+            exit 1
+        fi
+        OPENWRT_DIR=$(realpath $2)
+        PKG_NAME=$3
+        FUNC_run_abort_dev_package_process ${SUB_COMMAND} ${OPENWRT_DIR} ${PKG_NAME}
         ;;
     *)
         HELP
