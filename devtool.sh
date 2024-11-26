@@ -2,7 +2,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="2"
-FIX_VERSION="0"
+FIX_VERSION="1"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 ###
@@ -24,25 +24,20 @@ function HELP(){
     $0 modify <OPENWRT_PKG_DIR>
     $0 abort  <OPENWRT_DIR> <PKG_NAME>
     --------------------------------------------------
-    "
-
-    echo "
-    --------------------------------------------------
     OpenWRT Layout
     --------------------------------------------------
-    openwrt/                    <--- <OPENWRT_DIR>
+    openwrt/                 <--- <OPENWRT_DIR>
+        feeds.conf
+        feeds/
         package/
             .../
-                <pkg>/          <--- <OPENWRT_PKG_DIR>
+                <pkg>/       <--- <OPENWRT_PKG_DIR>
                     Makefile
-    --------------------------------------------------
-    "
-
-    echo "
+        build_dir/
     --------------------------------------------------
     WORKSPACE Layout
     --------------------------------------------------
-    <WORKSPACE_DIR>/      <--- ${ROOT_WORKSPACE_DIR}
+    <WORKSPACE_DIR>/  <--- ${ROOT_WORKSPACE_DIR}
         devtool.sh             
         workspace/             
             FEEDS/
@@ -267,13 +262,14 @@ function FUNC_create_modify_source(){
     cd ${WORKSPACE_SRC_DIR}
 
     local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
-    local pkg_version=$(    sed -E -n "s#.?PKG_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile    )
+    local pkg_version=$(    sed -E -n "s#.?PKG_SOURCE_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile    )
 
     echo "pkg_source_url=${pkg_source_url}"
     FUNC_convert_git_url ${pkg_source_url}
 
     echo "git clone ${PKG_SOURCE_URL_GIT}"
     git clone ${PKG_SOURCE_URL_GIT} .
+    echo "git checkout -b dev ${pkg_version}"
     git checkout -b dev ${pkg_version}
 }
 
@@ -282,6 +278,9 @@ function FUNC_redirect_src_pkg_url(){
     cd ${WORKSPACE_PKG_DIR}
 
     sed -i "/^PKG_SOURCE_URL/ s/^/# /"                                  Makefile
+    sed -i "/^PKG_SOURCE_PROTO/ s/^/# /"                                Makefile
+    sed -i "/^PKG_SOURCE_VERSION/ s/^/# /"                              Makefile
+
     sed -i "/^PKG_SOURCE:=/ s/^/# /"                                    Makefile
     sed -i "/^PKG_HASH:=/ s/^/# /"                                      Makefile
     sed -i "/^PKG_BUILD_DIR:=/ s/^/# /"                                 Makefile
@@ -290,8 +289,8 @@ function FUNC_redirect_src_pkg_url(){
     sed -i "/^PKG_RELEASE:=/ s/^/# /"                                   Makefile
 
     sed -i "/^# PKG_SOURCE_URL/ a PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}" Makefile
-    sed -i "/^PKG_SOURCE_URL/ a PKG_SOURCE_PROTO:=git"                   Makefile
-    sed -i "/^PKG_SOURCE_URL/ a PKG_SOURCE_VERSION:=dev"                 Makefile
+    sed -i "/^# PKG_SOURCE_PROTO/ a PKG_SOURCE_PROTO:=git"                     Makefile
+    sed -i "/^# PKG_SOURCE_VERSION/ a PKG_SOURCE_VERSION:=dev"                 Makefile
 }
 
 function FUNC_run_modify_package_process(){
