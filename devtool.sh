@@ -2,7 +2,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="2"
-FIX_VERSION="1"
+FIX_VERSION="2"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 ###
@@ -289,8 +289,8 @@ function FUNC_redirect_src_pkg_url(){
     sed -i "/^PKG_RELEASE:=/ s/^/# /"                                   Makefile
 
     sed -i "/^# PKG_SOURCE_URL/ a PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}" Makefile
-    sed -i "/^# PKG_SOURCE_PROTO/ a PKG_SOURCE_PROTO:=git"                     Makefile
-    sed -i "/^# PKG_SOURCE_VERSION/ a PKG_SOURCE_VERSION:=dev"                 Makefile
+    sed -i "/PKG_SOURCE_URL:=file/ a PKG_SOURCE_PROTO:=git"                    Makefile
+    sed -i "/PKG_SOURCE_URL:=file/ a PKG_SOURCE_VERSION:=dev"                  Makefile
 }
 
 function FUNC_run_modify_package_process(){
