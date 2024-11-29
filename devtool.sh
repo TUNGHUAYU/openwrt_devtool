@@ -2,7 +2,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="2"
-FIX_VERSION="2"
+FIX_VERSION="3"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 ###
@@ -72,7 +72,11 @@ function FUNC_create_folder(){
 
 function FUNC_get_new_pkg_list(){
     local new_pkg_list=""
-    new_pkg_list=$(find ${WORKSPACE_DIR}/FEEDS/feed_dev_pkg/ -mindepth 1 -type d)
+    local new_pkg_workdir="${WORKSPACE_DIR}/FEEDS/feed_dev_pkg/"
+
+    if [[ -d ${new_pkg_workdir} ]]; then
+        new_pkg_list=$(find ${new_pkg_workdir} -mindepth 1 -type d)
+    fi
 
     # export to global variable 
     NEW_PKG_LIST="${new_pkg_list}"
@@ -81,8 +85,12 @@ function FUNC_get_new_pkg_list(){
 
 function FUNC_get_mod_pkg_list(){
     local mod_pkg_list=""
-    mod_pkg_makefile_list=$(find ${WORKSPACE_DIR}/PACKAGES/ -iname makefile -type f)
-    mod_pkg_list=${mod_pkg_makefile_list//\/Makefile}
+    local mod_pkg_workdir="${WORKSPACE_DIR}/PACKAGES/"
+
+    if [[ -d ${mod_pkg_workdir}  ]]; then
+        mod_pkg_makefile_list=$(find ${mod_pkg_workdir} -iname makefile -type f)
+        mod_pkg_list=${mod_pkg_makefile_list//\/Makefile}
+    fi
 
     # export to global variable
     MOD_PKG_LIST="${mod_pkg_list}"
