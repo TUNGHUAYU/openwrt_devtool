@@ -251,34 +251,41 @@ function FUNC_symlink_modify_makefile(){
     ln -sf ${WORKSPACE_PKG_DIR}/Makefile ${OPENWRT_PKG_DIR}/Makefile
 }
 
-function FUNC_convert_git_url(){
+function FUNC_parse_url(){
     local url=$1
+    local pkg_version=$( sed -E -n "s#.?PKG_SOURCE_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
 
     if [[ $url == *".git"* ]]; then
+        PKG_SOURCE_URL_TYPE="git"
         PKG_SOURCE_URL_GIT=${url}
+        PKG_SOURCE_URL_GIT_BRANCH=${pkg_version}
     elif [[ $url == *"archive"* ]]; then
-        PKG_SOURCE_URL_ARC=${url}
-        PKG_SOURCE_URL_GIT=${url/\/-\/archive\/*/.git}
+        PKG_SOURCE_URL_TYPE="archive"
+        PKG_SOURCE_URL_ARC="${url}"
+        PKG_SOURCE_URL_GIT="${url/\/-\/archive\/*/.git}"
+        PKG_SOURCE_URL_GIT_BRANCH="${url##*archive/}"
     fi
-
 }
 
 function FUNC_create_modify_source(){
     FUNC_is_folder_existed "${WORKSPACE_SRC_DIR}"
     FUNC_create_folder "${WORKSPACE_SRC_DIR}"
-   
+    local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
+
+    # Parse url 
+    echo "FUNC_parse_url ${pkg_source_url}"
+    FUNC_parse_url ${pkg_source_url}
+    
+    # Move to ${WORKSPACE_SRC_DIR}
     cd ${WORKSPACE_SRC_DIR}
 
-    local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
-    local pkg_version=$(    sed -E -n "s#.?PKG_SOURCE_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile    )
-
-    echo "pkg_source_url=${pkg_source_url}"
-    FUNC_convert_git_url ${pkg_source_url}
-
+    # Clone repository
     echo "git clone ${PKG_SOURCE_URL_GIT}"
     git clone ${PKG_SOURCE_URL_GIT} .
-    echo "git checkout -b dev ${pkg_version}"
-    git checkout -b dev ${pkg_version}
+
+    # Create & Switch branch to dev
+    echo "git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}"
+    git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}
 }
 
 function FUNC_redirect_src_pkg_url(){
