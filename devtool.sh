@@ -2,7 +2,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="2"
-FIX_VERSION="3"
+FIX_VERSION="4"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 ###
@@ -48,6 +48,24 @@ function HELP(){
     
     exit 1
 }
+
+function FUNC_housekeeping(){
+
+    local empty_list=$( find ${WORKSPACE_DIR} -empty )
+
+    if [[ -n ${empty_list} ]]; then
+
+        echo "====================================================="
+        echo "HOUSE KEEPING ( remove empty folders/files )"
+        echo "====================================================="
+        for p in ${empty_list}
+        do
+            echo "rm -r ${p}"
+            rm -r ${p}
+        done
+    fi
+}
+
 
 function FUNC_is_folder_existed(){
     local DIR=$1
@@ -590,9 +608,11 @@ case "${SUB_COMMAND}" in
         OPENWRT_DIR=$(realpath $2)
         PKG_NAME=$3
         FUNC_run_abort_dev_package_process ${SUB_COMMAND} ${OPENWRT_DIR} ${PKG_NAME}
+        FUNC_housekeeping
         ;;
     *)
         HELP
         exit 1
         ;;
 esac
+
