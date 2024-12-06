@@ -287,24 +287,6 @@ function FUNC_run_new_package_process(){
 
 # ---------- MODIFY PACKAGE PROCESS (BEGIN) ----------
 
-# function FUNC_symlink_modify_makefile(){
-#     FUNC_is_folder_existed "${WORKSPACE_PKG_DIR}"
-#     FUNC_create_folder     "${WORKSPACE_PKG_DIR}"
-# 
-#     # Move to ${WORKSPACE_PKG_DIR}
-#     cd ${WORKSPACE_PKG_DIR}
-# 
-#     # Backup/Restore package original Makefile
-#     if [[ ! -e ${OPENWRT_PKG_DIR}/.Makefile.origin ]]; then
-#         cp ${OPENWRT_PKG_DIR}/Makefile ${OPENWRT_PKG_DIR}/.Makefile.origin
-#     fi
-# 
-#     # Create symlink
-#     rm ${OPENWRT_PKG_DIR}/Makefile
-#     cp ${OPENWRT_PKG_DIR}/.Makefile.origin ${WORKSPACE_PKG_DIR}/Makefile
-#     ln -sf ${WORKSPACE_PKG_DIR}/Makefile ${OPENWRT_PKG_DIR}/Makefile
-# }
-
 function FUNC_symlink_modify_pkg_dir(){
 
     FUNC_is_folder_existed "${WORKSPACE_PKG_DIR}"
@@ -506,33 +488,6 @@ function FUNC_abort_new_pkg_work(){
     echo "rm -rf $path"
     rm -rf $path
 }
-
-#function FUNC_abort_mod_pkg_work(){
-#    echo "do ${FUNCNAME[0]}"
-#
-#    local path=""
-#
-#    # 1. remove "<openwrt>/build_dir/../<pkg>/"
-#    path=$(find ${OPENWRT_DIR}/build_dir/target-*/ -maxdepth 1 -name "${PKG_NAME}*" -type d)
-#    echo "rm -rf $path"
-#    rm -rf $path
-#    # 2. restore package openwrt-Makefile via ".Makefile.origin"
-#    path=$(find ${OPENWRT_DIR}/package/ -name "${PKG_NAME}")
-#    echo "rm $path/Makefile"
-#    echo "cp $path/.Makefile.origin $path/Makefile"
-#    echo "rm $path/.Makefile.origin"
-#    rm $path/Makefile
-#    cp $path/.Makefile.origin $path/Makefile
-#    rm $path/.Makefile.origin
-#    # 3. remove "<workspace>/SOURCES/<pkg>"
-#    path=$(find ${WORKSPACE_DIR}/SOURCES/ -maxdepth 1 -name "${PKG_NAME}" -type d)
-#    echo "rm -rf $path"
-#    rm -rf $path
-#    # 4. remove "<workspace>/PACKAGES/.../<pkg>"
-#    path=$(find ${WORKSPACE_DIR}/PACKAGES/ -name "${PKG_NAME}" -type d)
-#    echo "rm -rf $path"
-#    rm -rf $path
-#}
 
 FUNC_abort_mod_pkg_work(){
     echo "do ${FUNCNAME[0]}"
