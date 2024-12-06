@@ -1,9 +1,46 @@
 #!/bin/bash
+
+
+###
+# GLOBAL VARIABLES DECLARATION
+###
+
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="2"
 FIX_VERSION="4"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
+
+SHELL_PATH=""
+SUB_COMMAND=""
+MOD_PKG_LIST=""
+NEW_PKG_LIST=""
+
+CATEGORY=""
+SUBMENU=""
+TITLE=""
+SAMPLE_PLUGIN_URL=""
+
+FEED_NAME=""
+FEED_MAKEFILE_URL=""
+
+PKG_NAME=""
+PKG_PATH=""
+PKG_SOURCE_URL_ARC=""
+PKG_SOURCE_URL_GIT=""
+PKG_SOURCE_URL_GIT_BRANCH=""
+PKG_SOURCE_URL_TYPE=""
+PKG_TYPE=""
+
+OPENWRT_DIR=""
+OPENWRT_PKG_DIR=""
+
+WORKSPACE_DIR_PARENT=""
+WORKSPACE_DIR=""
+WORKSPACE_FEED_DIR=""
+WORKSPACE_FEED_PKG_DIR=""
+WORKSPACE_PKG_DIR=""
+WORKSPACE_SRC_DIR=""
 
 ###
 # FUNCTION
@@ -37,7 +74,7 @@ function HELP(){
     --------------------------------------------------
     WORKSPACE Layout
     --------------------------------------------------
-    <WORKSPACE_DIR>/  <--- ${ROOT_WORKSPACE_DIR}
+    <WORKSPACE_DIR>/  <--- ${WORKSPACE_DIR_PARENT}
         devtool.sh             
         workspace/             
             FEEDS/
@@ -56,7 +93,7 @@ function FUNC_housekeeping(){
     if [[ -n ${empty_list} ]]; then
 
         echo "====================================================="
-        echo "HOUSE KEEPING ( remove empty folders/files )"
+        echo "HOUSE KEEPING ( remove empty folders )"
         echo "====================================================="
         for p in ${empty_list}
         do
@@ -68,12 +105,12 @@ function FUNC_housekeeping(){
 
 
 function FUNC_is_folder_existed(){
-    local DIR=$1
+    local dir=$1
 
-    if [[ -d ${DIR} ]]; then
-        read -p "overwrite ${DIR}?(y/n)"
+    if [[ -d ${dir} ]]; then
+        read -p "overwrite ${dir}?(y/n)"
         if [[ $REPLY == "y" ]]; then
-            rm ${DIR} -rf
+            rm ${dir} -rf
             FLAG_OVERWRITE=1
         else
             exit 1
@@ -82,10 +119,10 @@ function FUNC_is_folder_existed(){
 }
 
 function FUNC_create_folder(){
-    local DIR=$1
+    local dir=$1
 
-    echo "Create folder \"${DIR}\""
-    mkdir -p ${DIR}
+    echo "Create folder \"${dir}\""
+    mkdir -p ${dir}
 }
 
 function FUNC_get_new_pkg_list(){
@@ -147,7 +184,7 @@ function FUNC_create_new_source(){
     FUNC_create_folder "${WORKSPACE_SRC_DIR}"
 
     cd "${WORKSPACE_SRC_DIR}"
-    git archive --remote="${REMOTE_URL}" main | tar -x
+    git archive --remote="${SAMPLE_PLUGIN_URL}" main | tar -x
 
     # convert content "demo" to "${PKG_NAME}"
     {
@@ -207,7 +244,7 @@ function FUNC_register_local_feed(){
     # openwrt 
     cd ${OPENWRT_DIR}
     
-    feed_expr="src-link ${FEED_NAME} ${WORKSPACE_FEED_DIR}"
+    local feed_expr="src-link ${FEED_NAME} ${WORKSPACE_FEED_DIR}"
     
     ret=$(grep "src-link ${FEED_NAME}" feeds.conf)
     if [[ -z $ret ]]; then
@@ -236,12 +273,11 @@ function FUNC_run_new_package_process(){
     WORKSPACE_FEED_DIR="${WORKSPACE_DIR}/FEEDS/${FEED_NAME}"
     WORKSPACE_FEED_PKG_DIR="${WORKSPACE_DIR}/FEEDS/${FEED_NAME}/${PKG_NAME}"
 
-    REPO_BRANCH="main"
     CATEGORY="pkg-dev"
     SUBMENU="pkg"
     TITLE="${PKG_NAME}"
 
-    REMOTE_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/demo.git"
+    SAMPLE_PLUGIN_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/demo.git"
     FEED_MAKEFILE_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/feed-template-makefile.git"
 
     FUNC_create_new_feed
@@ -564,7 +600,7 @@ function FUNC_run_abort_dev_package_process(){
 
 PKG_TYPE="none"
 SHELL_PATH=$(realpath $0)
-ROOT_WORKSPACE_DIR="${SHELL_PATH%/*}"
+WORKSPACE_DIR_PARENT="${SHELL_PATH%/*}"
 WORKSPACE_DIR="${SHELL_PATH%/*}/workspace"
 SUB_COMMAND=$1
 
