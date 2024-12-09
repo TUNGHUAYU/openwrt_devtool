@@ -2,7 +2,7 @@
 
 > author: Terry Yu ( terry_yu@arcadyan.com.tw )
 >
-> version: v1.2.x
+> version: v1.3.x
 
 
 Please contact with me or leave question in the below confluence page

@@ -3,6 +3,13 @@ please see the [confluence
 page](https://arc-conf.arcadyan.com.tw/pages/viewpage.action?spaceKey=TERRYYU&title=Orange+-+openwrt-devtool) to know
 the details
 
+v1.3.0:
+- Improve
+    - feature
+        - list  : List all developed packages with relative path ( based on workspace )
+        - modify: Copy whole package folder instead of Makefile only. 
+                  It can include essential files and folders ( e.g. Config.in, files/, ... )
+
 v1.2.0:
 - Add
     - feature
