@@ -40,6 +40,7 @@ WORKSPACE_DIR=""
 WORKSPACE_FEED_DIR=""
 WORKSPACE_FEED_PKG_DIR=""
 WORKSPACE_PKG_DIR=""
+WORKSPACE_PKG_ORI_DIR=""
 WORKSPACE_SRC_DIR=""
 
 ###
@@ -287,56 +288,41 @@ function FUNC_run_new_package_process(){
 
 # ---------- MODIFY PACKAGE PROCESS (BEGIN) ----------
 
-function FUNC_symlink_modify_pkg_dir(){
-
+function FUNC_create_workspace_pkg_dir(){
+    
     FUNC_is_folder_existed "${WORKSPACE_PKG_DIR}"
     FUNC_create_folder     "${WORKSPACE_PKG_DIR}"
-
-    local openwrt_pkg_dir_parent=$( dirname ${OPENWRT_PKG_DIR} )
-    local workspace_pkg_dir_parent=$( dirname ${WORKSPACE_PKG_DIR} )
-
     
-    # duplicate openwrt pkg dir
-    if [[ ! -e ${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin ]]; then
-        cp -P \
-            "${openwrt_pkg_dir_parent}/${PKG_NAME}" \
-            "${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin"
-
+    # copy openwrt pkg dir to workspace pkg dir
+    if [[ -h ${OPENWRT_PKG_DIR} ]]; then
+        # copy folder via symlink file
+        cp -rL "${OPENWRT_PKG_DIR}" "${WORKSPACE_PKG_DIR}/.."
+    else
+        # copy folder
+        cp -r "${OPENWRT_PKG_DIR}" "${WORKSPACE_PKG_DIR}/..}"
     fi
+}
+
+function FUNC_create_worksapce_pkg_ori_dir(){
+
+    WORKSPACE_PKG_ORI_DIR="${WORKSPACE_PKG_DIR/PACKAGES/PACKAGES_ORIGIN}"
+    FUNC_is_folder_existed "${WORKSPACE_PKG_ORI_DIR}"
+    FUNC_create_folder     "${WORKSPACE_PKG_ORI_DIR}"
 
     # copy openwrt pkg dir to workspace pkg dir
-    if [[ ! -e ${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin/.Makefile.origin ]]; then
-        cp -r \
-            "$( realpath ${openwrt_pkg_dir_parent}/${PKG_NAME} )" \
-            "${workspace_pkg_dir_parent}"
+    if [[ -h ${OPENWRT_PKG_DIR} ]]; then
+        # copy symlink file
+        rm -r "${WORKSPACE_PKG_ORI_DIR}"
+        cp -rf "${OPENWRT_PKG_DIR}" "${WORKSPACE_PKG_ORI_DIR}"
     else
-        cp -r \
-            "$( realpath ${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin )" \
-            "${workspace_pkg_dir_parent}"
-
-        mv \
-            "${workspace_pkg_dir_parent}/${PKG_NAME}/.Makefile.origin" \
-            "${workspace_pkg_dir_parent}/${PKG_NAME}/Makefile"
+        # copy folder
+        cp -r "${OPENWRT_PKG_DIR}" "${WORKSPACE_PKG_ORI_DIR}/.."
     fi
-
-    # Skip openwrt make scan
-    if [[ ! -e ${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin/.Makefile.origin ]]; then
-        mv \
-            "${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin/Makefile" \
-            "${openwrt_pkg_dir_parent}/.${PKG_NAME}.origin/.Makefile.origin" 
-    fi
-
-    # remove openwrt pkg dir
-    rm ${OPENWRT_PKG_DIR}
-
-    # symbolic link openwrt pkg dir to workspace pkg dir
-    ln -sf ${WORKSPACE_PKG_DIR} ${OPENWRT_PKG_DIR}
-
 }
 
 function FUNC_parse_url(){
     local url=$1
-    local pkg_version=$( sed -E -n "s#.?PKG_SOURCE_VERSION.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
+    local pkg_version=$( sed -E -n "s|.?PKG_SOURCE_VERSION.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
 
     if [[ $url == *".git"* ]]; then
         PKG_SOURCE_URL_TYPE="git"
@@ -350,10 +336,11 @@ function FUNC_parse_url(){
     fi
 }
 
-function FUNC_create_modify_source(){
+function FUNC_create_workspace_src_dir(){
+
     FUNC_is_folder_existed "${WORKSPACE_SRC_DIR}"
     FUNC_create_folder "${WORKSPACE_SRC_DIR}"
-    local pkg_source_url=$( sed -E -n "s#.?PKG_SOURCE_URL.?=(.*)#\1#p" ${OPENWRT_PKG_DIR}/Makefile )
+    local pkg_source_url=$( sed -E -n "s|.?PKG_SOURCE_URL.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
 
     # Parse url 
     echo "FUNC_parse_url ${pkg_source_url}"
@@ -369,6 +356,13 @@ function FUNC_create_modify_source(){
     # Create & Switch branch to dev
     echo "git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}"
     git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}
+}
+
+function FUNC_symlink_pkg_dir(){
+
+    rm ${OPENWRT_PKG_DIR}
+    ln -sf ${WORKSPACE_PKG_DIR} ${OPENWRT_PKG_DIR}
+
 }
 
 function FUNC_redirect_src_pkg_url(){
@@ -401,10 +395,13 @@ function FUNC_run_modify_package_process(){
     WORKSPACE_PKG_DIR="${WORKSPACE_DIR}/PACKAGES/${PKG_PATH}"
     WORKSPACE_SRC_DIR="${WORKSPACE_DIR}/SOURCES/${PKG_NAME}"
 
-    # FUNC_symlink_modify_makefile
-    FUNC_symlink_modify_pkg_dir
-    FUNC_create_modify_source
+    # process
+    FUNC_create_workspace_pkg_dir
+    FUNC_create_worksapce_pkg_ori_dir
+    FUNC_create_workspace_src_dir
+    FUNC_symlink_pkg_dir
     FUNC_redirect_src_pkg_url
+
 }
 
 # ---------- LIST DEVELOPED PACKAGE PROCESS (BEGIN) ----------
@@ -490,36 +487,39 @@ function FUNC_abort_new_pkg_work(){
 }
 
 FUNC_abort_mod_pkg_work(){
+    
     echo "do ${FUNCNAME[0]}"
 
-    local path=""
+    # remove openwrt pkg dir
+    OPENWRT_PKG_DIR=$(find "${OPENWRT_DIR}/package" -name ${PKG_NAME})
+    echo "rm -rf ${OPENWRT_PKG_DIR}"
+    rm -rf ${OPENWRT_PKG_DIR}
 
-    # 1. remove "<openwrt>/build_dir/../<pkg>/"
-    path=$(find ${OPENWRT_DIR}/build_dir/target-*/ -maxdepth 1 -name "${PKG_NAME}*" -type d)
-    echo "rm -rf $path"
-    rm -rf $path
+    # restore origin openwrt pkg dir from workspace backup dir ( PACKAGE_ORIGIN/ )
+    local symlink_path=""
+    WORKSPACE_PKG_ORI_DIR=$(find "${WORKSPACE_DIR}/PACKAGES_ORIGIN" -name ${PKG_NAME})
+    if [[ -h ${WORKSPACE_PKG_ORI_DIR} ]]; then
+        symlink_path=$(readlink ${WORKSPACE_PKG_ORI_DIR})
+        echo "ln -s ${symlink_path} ${OPENWRT_PKG_DIR}"
+        ln -s ${symlink_path} ${OPENWRT_PKG_DIR}
+    else
+        echo "cp -r ${WORKSPACE_PKG_ORI_DIR} ${OPENWRT_PKG_DIR}"
+        cp -r ${WORKSPACE_PKG_ORI_DIR} ${OPENWRT_PKG_DIR}
+    fi
 
-    # 2. restore openwrt original package
-    path=$(find ${OPENWRT_DIR}/package/ -name "${PKG_NAME}")
-    local dir_name="$(dirname $path)"
-    echo "rm $path"
-    echo "mv $dir_name/.${PKG_NAME}.origin $path"
-    echo "mv $path/.Makefile.origin $path/Makefile"
-    rm $path
-    mv $dir_name/.${PKG_NAME}.origin $path
-    mv $path/.Makefile.origin $path/Makefile
-    
-    # 3. remove "<workspace>/SOURCES/<pkg>"
-    path=$(find ${WORKSPACE_DIR}/SOURCES/ -maxdepth 1 -name "${PKG_NAME}" -type d)
-    echo "rm -rf $path"
-    rm -rf $path
+    # remove workspace pkg ori dir
+    echo "rm -rf ${WORKSPACE_PKG_ORI_DIR}"
+    rm -rf ${WORKSPACE_PKG_ORI_DIR}
 
-    # 4. remove "<workspace>/PACKAGES/.../<pkg>"
-    path=$(find ${WORKSPACE_DIR}/PACKAGES/ -name "${PKG_NAME}" -type d)
-    echo "rm -rf $path"
-    rm -rf $path
+    # remove worksapce pkg dir
+    WORKSPACE_PKG_DIR=$(find "${WORKSPACE_DIR}/PACKAGES" -name ${PKG_NAME})
+    echo "rm -rf ${WORKSPACE_PKG_DIR}"
+    rm -rf ${WORKSPACE_PKG_DIR}
 
-
+    # remove worksapce src dir
+    WORKSPACE_SRC_DIR=$(find "${WORKSPACE_DIR}/SOURCES" -name ${PKG_NAME})
+    echo "rm -rf ${WORKSPACE_SRC_DIR}"
+    rm -rf ${WORKSPACE_SRC_DIR}
 }
 
 function FUNC_run_abort_dev_package_process(){
@@ -599,7 +599,7 @@ case "${SUB_COMMAND}" in
         OPENWRT_DIR=$(realpath $2)
         PKG_NAME=$3
         FUNC_run_abort_dev_package_process ${SUB_COMMAND} ${OPENWRT_DIR} ${PKG_NAME}
-        FUNC_housekeeping
+        #FUNC_housekeeping
         ;;
     *)
         HELP
