@@ -412,6 +412,7 @@ function FUNC_run_list_dev_package_process(){
 
     local count=0
     local type=""
+    local pkg_name=""
     local format="|%-03s|%-30s|%-10s|%-50s \n"
     local _format="|%-03d|%-30s|%-10s|%-50s \n"
     printf "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
@@ -420,15 +421,17 @@ function FUNC_run_list_dev_package_process(){
     for p in ${NEW_PKG_LIST}
     do
         type="new"
+        pkg_name="${p##*/}"
         count=$(( count + 1 ))
-        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p}"
+        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p/${WORKSPACE_DIR_PARENT}\/}"
     done
 
     for p in ${MOD_PKG_LIST}
     do
         type="modify"
+        pkg_name="${p##*/}"
         count=$(( count + 1 ))
-        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p}"
+        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p/${WORKSPACE_DIR_PARENT}\/}"
     done
 
 
