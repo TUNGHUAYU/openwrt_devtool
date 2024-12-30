@@ -8,7 +8,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="3"
-FIX_VERSION="0"
+FIX_VERSION="1"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 SHELL_PATH=""
@@ -276,7 +276,8 @@ function FUNC_run_new_package_process(){
 
     CATEGORY="pkg-dev"
     SUBMENU="pkg"
-    TITLE="${PKG_NAME}"
+    TITLE="${PKG_NAME} short description here"
+    DESCRIPTION="${PKG_NAME} long description here"
 
     SAMPLE_PLUGIN_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/demo.git"
     FEED_MAKEFILE_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/feed-template-makefile.git"
