@@ -323,12 +323,21 @@ function FUNC_create_worksapce_pkg_ori_dir(){
 
 function FUNC_parse_url(){
     local url=$1
-    local pkg_version=$( sed -E -n "s|.?PKG_SOURCE_VERSION.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
+    local pkg_source_version=$( sed -E -n "s|.?PKG_SOURCE_VERSION.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
+    local pkg_version=$( sed -E -n "s|.?PKG_VERSION.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
 
+    # workaround: PKG_SOURCE_VERSION:=v$(PKG_VERSION) in Makefile
+    if [[ ${pkg_source_version} =~ \$\(PKG_VERSION\) ]]; then
+        pkg_source_version=v${pkg_version}
+    fi
+
+    # url ONLY support 2 types shows below:
+    # (1) remote git repository url: git@<server_hostname>:<server_path>.git
+    # (2) gitlab archive url: https://gitlab.com/xxxx-/archive/<branch>
     if [[ $url == *".git"* ]]; then
         PKG_SOURCE_URL_TYPE="git"
         PKG_SOURCE_URL_GIT=${url}
-        PKG_SOURCE_URL_GIT_BRANCH=${pkg_version}
+        PKG_SOURCE_URL_GIT_BRANCH=${pkg_source_version}
     elif [[ $url == *"archive"* ]]; then
         PKG_SOURCE_URL_TYPE="archive"
         PKG_SOURCE_URL_ARC="${url}"
@@ -351,7 +360,7 @@ function FUNC_create_workspace_src_dir(){
     cd ${WORKSPACE_SRC_DIR}
 
     # Clone repository
-    echo "git clone ${PKG_SOURCE_URL_GIT}"
+    echo "git clone ${PKG_SOURCE_URL_GIT} ."
     git clone ${PKG_SOURCE_URL_GIT} .
 
     # Create & Switch branch to dev
@@ -370,20 +379,20 @@ function FUNC_redirect_src_pkg_url(){
 
     cd ${WORKSPACE_PKG_DIR}
 
-    sed -i "/^PKG_SOURCE_URL/ s/^/# /"                                  Makefile
-    sed -i "/^PKG_SOURCE_PROTO/ s/^/# /"                                Makefile
-    sed -i "/^PKG_SOURCE_VERSION/ s/^/# /"                              Makefile
+    # comment all variable with leading "PKG_"
+    sed -i "/^PKG_.*=/ s/^/# /"                             Makefile
 
-    sed -i "/^PKG_SOURCE:=/ s/^/# /"                                    Makefile
-    sed -i "/^PKG_HASH:=/ s/^/# /"                                      Makefile
-    sed -i "/^PKG_BUILD_DIR:=/ s/^/# /"                                 Makefile
-    sed -i "/^PKG_LICENSE:=/ s/^/# /"                                   Makefile
-    sed -i "/^PKG_LICENSE_FILES:=/ s/^/# /"                             Makefile
-    sed -i "/^PKG_RELEASE:=/ s/^/# /"                                   Makefile
+    # insert redirection necessary variables
+    sed -i "1i \\
+    ###########################################\\
+    PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}\\
+    PKG_SOURCE_PROTO:=git\\
+    PKG_SOURCE_VERSION:=dev\\
+    PKG_NAME:=arc_wol_proxy\\
+    PKG_VERSION:=0.1.0\\
+    PKG_RELEASE:=1\\
+    ###########################################" Makefile 
 
-    sed -i "/^# PKG_SOURCE_URL/ a PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}" Makefile
-    sed -i "/PKG_SOURCE_URL:=file/ a PKG_SOURCE_PROTO:=git"                    Makefile
-    sed -i "/PKG_SOURCE_URL:=file/ a PKG_SOURCE_VERSION:=dev"                  Makefile
 }
 
 function FUNC_run_modify_package_process(){
