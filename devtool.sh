@@ -385,6 +385,7 @@ function FUNC_redirect_src_pkg_url(){
     # insert redirection necessary variables
     sed -i "1i \\
     ###########################################\\
+    # insert by openwrt-devtool automatically \\
     PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}\\
     PKG_SOURCE_PROTO:=git\\
     PKG_SOURCE_VERSION:=dev\\
