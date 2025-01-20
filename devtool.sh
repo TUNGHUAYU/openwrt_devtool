@@ -152,6 +152,30 @@ function FUNC_get_mod_pkg_list(){
     MOD_PKG_LIST="${mod_pkg_list}"
 }
 
+function FUNC_check_pkg_devloping(){
+    local pkg_name=""
+    echo $pkg_name
+
+    # check if package is in ${NEW_PKG_LIST}
+    for p in ${NEW_PKG_LIST}
+    do
+        pkg_name=${p##*/}
+        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
+            PKG_TYPE="new"
+            return
+        fi
+    done
+
+    # check if package is in ${MOD_PKG_LIST}
+    for p in ${MOD_PKG_LIST}
+    do
+        pkg_name=${p##*/}
+        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
+            PKG_TYPE="modify"
+            return
+        fi
+    done
+}
 
 # ---------- NEW PACKAGE PROCESS (BEGIN) ----------
 
@@ -282,9 +306,23 @@ function FUNC_run_new_package_process(){
     SAMPLE_PLUGIN_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/demo.git"
     FEED_MAKEFILE_URL="git@vcs-sw2.arcadyan.com.tw:prpl-dev/feed-template-makefile.git"
 
-    FUNC_create_new_feed
-    FUNC_create_new_source
-    FUNC_register_local_feed
+    # Determin PKG_TYPE
+    FUNC_check_pkg_devloping
+
+    # Check if the package hasn't been developed
+    case "${PKG_TYPE}" in
+        none )
+            # process
+            FUNC_create_new_feed
+            FUNC_create_new_source
+            FUNC_register_local_feed  
+            ;;
+            
+        * )
+            echo "ERROR: package has been developed!!"
+            exit 2
+            ;;
+    esac
 }
 
 # ---------- MODIFY PACKAGE PROCESS (BEGIN) ----------
@@ -406,13 +444,25 @@ function FUNC_run_modify_package_process(){
     WORKSPACE_PKG_DIR="${WORKSPACE_DIR}/PACKAGES/${PKG_PATH}"
     WORKSPACE_SRC_DIR="${WORKSPACE_DIR}/SOURCES/${PKG_NAME}"
 
-    # process
-    FUNC_create_workspace_pkg_dir
-    FUNC_create_worksapce_pkg_ori_dir
-    FUNC_create_workspace_src_dir
-    FUNC_symlink_pkg_dir
-    FUNC_redirect_src_pkg_url
+    # Determin PKG_TYPE
+    FUNC_check_pkg_devloping
 
+    # Check if the package hasn't been developed
+    case "${PKG_TYPE}" in
+        none )
+            # process
+            FUNC_create_workspace_pkg_dir
+            FUNC_create_worksapce_pkg_ori_dir
+            FUNC_create_workspace_src_dir
+            FUNC_symlink_pkg_dir
+            FUNC_redirect_src_pkg_url    
+            ;;
+            
+        * )
+            echo "ERROR: package has been developed!!"
+            exit 2
+            ;;
+    esac
 }
 
 # ---------- LIST DEVELOPED PACKAGE PROCESS (BEGIN) ----------
@@ -450,33 +500,6 @@ function FUNC_run_list_dev_package_process(){
 
 
 # ---------- ABORT DEVELOPED PACKAGE PROCESS (BEGIN) ----------
-
-function FUNC_check_pkg_devloping(){
-    local pkg_name=""
-    echo $pkg_name
-
-    # check if package is in ${NEW_PKG_LIST}
-    for p in ${NEW_PKG_LIST}
-    do
-        pkg_name=${p##*/}
-        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
-            PKG_TYPE="new"
-            return
-        fi
-    done
-
-    # check if package is in ${MOD_PKG_LIST}
-    for p in ${MOD_PKG_LIST}
-    do
-        pkg_name=${p##*/}
-        if [[ "${pkg_name}" == "${PKG_NAME}" ]]; then
-            PKG_TYPE="modify"
-            return
-        fi
-    done
-}
-
-
 
 function FUNC_abort_new_pkg_work(){
     echo "do ${FUNCNAME[0]}"
@@ -542,10 +565,10 @@ function FUNC_run_abort_dev_package_process(){
     OPENWRT_DIR=$2
     PKG_NAME=$3
 
-    # Check if package name is legal
+    # # Determin PKG_TYPE
     FUNC_check_pkg_devloping
 
-    # 
+    # Check if package name has been developed
     case "${PKG_TYPE}" in
         new )
             # abort new type package
@@ -556,7 +579,7 @@ function FUNC_run_abort_dev_package_process(){
             FUNC_abort_mod_pkg_work
             ;;
         * )
-            echo "abort ... ${FUNCNAME[0]}"
+            echo "WARN: package has NOT been developed!!"
             exit 2
             ;;
     esac
