@@ -8,7 +8,7 @@
 FLAG_OVERWRITE=0
 MAJOR_VERSION="1"
 MINOR_VERSION="3"
-FIX_VERSION="2"
+FIX_VERSION="3"
 VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${FIX_VERSION}"
 
 SHELL_PATH=""
@@ -427,7 +427,7 @@ function FUNC_redirect_src_pkg_url(){
     PKG_SOURCE_URL:=file://${WORKSPACE_SRC_DIR}\\
     PKG_SOURCE_PROTO:=git\\
     PKG_SOURCE_VERSION:=dev\\
-    PKG_NAME:=arc_wol_proxy\\
+    PKG_NAME:=${PKG_NAME}\\
     PKG_VERSION:=0.1.0\\
     PKG_RELEASE:=1\\
     ###########################################" Makefile 
