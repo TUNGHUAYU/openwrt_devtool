@@ -3,6 +3,29 @@ please see the [confluence
 page](https://arc-conf.arcadyan.com.tw/pages/viewpage.action?spaceKey=TERRYYU&title=Orange+-+openwrt-devtool) to know
 the details
 
+v.2.0.0:
+
+This major version changed architecture for expandable, flexiable, and modulization.
+Its change a lot of place including previous infrastructure.  
+Therefore, it is **NOT** backward compability.
+
+- Improve
+    - architecture
+        - .devtool/: Gather devtool related files and folders.
+            - scripts/ : Gather shell scripts. 
+            - config/  : Gather configuration files.
+            - template/: Gather makefile templates.
+    - action
+        - new    : Support reference Makefiles 
+        - new    : Support reference Package Sources.
+        - new    : Provide TUI for reference Makefile selection.
+        - new    : Provide TUI for reference Package source selection.
+        - modify : Provide TUI for openwrt package selection. <br>
+                    (searching path: ${OPENWRT_DIR}/package/feed/)
+        - abort  : Provide double check mechanism that avoid accidentally deleted.
+        
+---
+
 v1.3.0:
 - Improve
     - feature
@@ -28,4 +51,4 @@ v1.0.0:
         - new:    new package ( prpl plugin sample package )
         - modify: new existed package
 
-**notation**: '\*' represents the change does NOT support backward incompability.
+**notation**: '\*' represents the change does NOT support backward compability.

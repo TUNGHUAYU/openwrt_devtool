@@ -1,0 +1,32 @@
+%define {
+    %persistent object Demo {
+        
+        %persistent object Bulletin {
+            uint32 say(%in %mandatory string author, %in %mandatory string message);
+            %persistent object Post[] {
+                %persistent string Author {
+                    on action read call print_action;
+                    on action write call print_action;
+                }
+                %persistent string Message;
+            }
+        }
+
+        object Sync {
+            int16 sync_object();
+        }
+
+        object Timer {
+            %volatile %read-only uint16 LeftTime {
+                on action read call read_left_time;
+            }
+            int16 enable();
+            int16 disable();
+        }
+    }
+}
+
+%populate {
+    // Remove this line to disable printing of all events
+    on event "*" call print_event;
+}

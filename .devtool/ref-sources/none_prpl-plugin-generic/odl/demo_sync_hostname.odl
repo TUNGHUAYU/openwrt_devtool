@@ -1,0 +1,9 @@
+%define {
+    select Demo {
+        object Hosts {
+            object Host[] {
+                string HostName;
+            }
+        }
+    }
+}

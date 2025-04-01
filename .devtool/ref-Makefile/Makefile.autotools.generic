@@ -1,0 +1,36 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=<pkg-name>
+PKG_VERSION:=0.1
+PKG_RELEASE:=1
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=file://<local-repo-url>
+PKG_SOURCE_VERSION:=<repo-branch>
+PKG_MIRROR_HASH:=skip
+
+PKG_FIXUP:=autoreconf
+PKG_INSTALL:=1
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+    SECTION:=utils
+    CATEGORY:=<category>
+    TITLE:=<title>
+endef
+
+define Package/$(PKG_NAME)/description
+    $(PKG_NAME) description here
+    <description>
+endef
+
+define Build/Configure
+	$(call Build/Configure/Default)
+endef
+
+define Package/$(PKG_NAME)/install
+	$(CP) $(PKG_INSTALL_DIR)/* $(1)/
+endef
+
+$(eval $(call BuildPackage,$(PKG_NAME)))
