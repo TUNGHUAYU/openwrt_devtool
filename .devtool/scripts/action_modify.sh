@@ -108,7 +108,7 @@ function FUNC_redirect_src_pkg_url(){
     PKG_SOURCE_PROTO:=git\\
     PKG_SOURCE_VERSION:=dev\\
     PKG_NAME:=${PKG_NAME}\\
-    PKG_VERSION:=0.1.0\\
+    PKG_VERSION:=${PKG_SOURCE_URL_GIT_BRANCH}\\
     PKG_RELEASE:=1\\
     ###########################################" Makefile 
 
