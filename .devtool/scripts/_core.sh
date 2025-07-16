@@ -26,6 +26,17 @@ FUNC_is_openwrt_dir(){
     fi
 }
 
+# new file in ${DEVTOOL_DIR}/.openwrt_dir to record the openwrt workspace
+FUNC_remember_openwrt_dir(){
+
+    local _OPENWRT_DIR=$(cat ${DEVTOOL_DIR}/.openwrt_dir 2>/dev/null)
+
+    if [[ ${_OPENWRT_DIR} != ${OPENWRT_DIR} ]]; then
+        echo "Update ${DEVTOOL_DIR}/.openwrt_dir"
+        echo "${OPENWRT_DIR}" > ${DEVTOOL_DIR}/.openwrt_dir
+    fi
+}
+
 
 function FUNC_get_new_pkg_list(){
     local new_pkg_list=""

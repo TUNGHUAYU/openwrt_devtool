@@ -1,8 +1,8 @@
 # intial work
+# Enter the path of OPENWRT workspace
+# Set environment OPENWRT_DIR value
 FUNC_init(){
-
-    #
     read -e -p "Enter OPENWRT_DIR="
-    [[ -n $REPLY ]] && FUNC_assign_env_value "OPENWRT_DIR" $(realpath $REPLY)
-    [[ -n $REPLY ]] && FUNC_write_env_value "OPENWRT_DIR" $(realpath $REPLY) ${DEVTOOL_CONF_PATH_FILE}
+    [[ -n $REPLY ]] && echo "OPENWRT_DIR=${REPLY}"
+    [[ -n $REPLY ]] && eval "OPENWRT_DIR=${REPLY}"
 }

@@ -55,6 +55,9 @@ FUNC_is_openwrt_dir && \
 [[ ${RESULT} == ${RESULT_FLASE} ]] && \
 exit ${ERROR_FILE_NO_EXIST}
 
+# update ${DEVTOOL_DIR}/.openwrt_dir 
+FUNC_remember_openwrt_dir
+
 # Capture all devtool packages 
 FUNC_get_new_pkg_list
 FUNC_get_mod_pkg_list
