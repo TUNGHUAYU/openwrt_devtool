@@ -68,6 +68,7 @@ case "${COMMAND}" in
         ;;
     new)
         source ${DEVTOOL_SCRIPT_ACTION_NEW}
+        [[ -z $2 ]] && HELP && exit ${ERROR_NO_PKG_NAME}
         PKG_NAME=$2
         FUNC_action_new ${PKG_NAME}
         ;;
