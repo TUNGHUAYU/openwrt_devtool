@@ -55,6 +55,11 @@ FUNC_is_openwrt_dir && \
 [[ ${RESULT} == ${RESULT_FLASE} ]] && \
 exit ${ERROR_FILE_NO_EXIST}
 
+# Check if git config exist
+FUNC_check_git_conf && \
+[[ ${RESULT} == ${RESULT_NOK} ]] && \
+exit ${ERROR_GIT_CONF}
+
 # update ${DEVTOOL_DIR}/.openwrt_dir 
 FUNC_remember_openwrt_dir
 

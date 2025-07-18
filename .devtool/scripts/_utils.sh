@@ -121,3 +121,25 @@ function FUNC_tui_select(){
 
     RESULT=${list[${index}]}
 }
+
+
+# Check git config ( must include name and email )
+function FUNC_check_git_conf(){
+    # Get name and email 
+    local author_name=$(git config --global user.name)
+    local author_email=$(git config --global user.email)
+
+    # Check
+    if [ -z ${author_name} ] || [ -z ${author_email} ]; then
+        echo "ERROR: No git config name or email"
+        echo "please git --global config user.name <name>"
+        echo "please git --global config user.email <email>"
+        echo "git.name = ${author_name}"
+        echo "git.email = ${author_email}"
+        RESULT=${RESULT_NOK}
+        return
+    fi
+
+    # 
+    RESULT=${RESULT_OK}
+}
