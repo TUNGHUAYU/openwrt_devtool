@@ -8,7 +8,6 @@ function FUNC_create_new_pkg(){
     "${DEVTOOL_DIR}/.devtool/ref-Makefile/" \
     "Please select Makefile style:" \
     "" \
-    "" \
     "No. Makefile-Type Makefile-Path"
 
     local reference_make_path=${RESULT}
@@ -58,7 +57,6 @@ function FUNC_create_new_pkg_source(){
     "${list}" \
     "${DEVTOOL_DIR}/.devtool/ref-sources/" \
     "Please select sample source:" \
-    "" \
     "" \
     "No. Source_Name Source-Path"
 
