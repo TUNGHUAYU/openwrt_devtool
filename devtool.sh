@@ -78,7 +78,8 @@ case "${COMMAND}" in
         source ${DEVTOOL_SCRIPT_ACTION_NEW}
         [[ -z $2 ]] && HELP && exit ${ERROR_NO_PKG_NAME}
         PKG_NAME=$2
-        FUNC_action_new ${PKG_NAME}
+        URL=$3
+        FUNC_action_new ${PKG_NAME} ${URL}
         ;;
     modify)
         source ${DEVTOOL_SCRIPT_ACTION_MODIFY}

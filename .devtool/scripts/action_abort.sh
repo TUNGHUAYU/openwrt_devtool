@@ -87,7 +87,7 @@ function FUNC_action_abort(){
     fi
 
     # # Determin PKG_TYPE
-    FUNC_check_pkg_devloping
+    FUNC_check_pkg_type
     echo "PKG_TYPE:${PKG_TYPE}"
     echo 
 

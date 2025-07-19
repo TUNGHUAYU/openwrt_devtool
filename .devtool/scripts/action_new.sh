@@ -89,6 +89,22 @@ function FUNC_create_new_pkg_source(){
     cd - > /dev/null
 }
 
+function FUNC_create_new_pkg_source_remote(){
+
+    #
+    local dir=${DEVTOOL_SRC_DIR}
+    FUNC_is_folder_existed "${dir}"
+    FUNC_create_folder "${dir}"
+
+    # copy reference source
+    cd "${dir}"
+    #cp -r ${reference_source_path}/. .
+    git clone ${URL} .
+    git checkout -b dev
+    
+    cd - > /dev/null
+}
+
 function FUNC_register_local_feed(){
     # openwrt 
     cd ${OPENWRT_DIR}
@@ -112,15 +128,16 @@ function FUNC_register_local_feed(){
 
 function FUNC_action_new(){
 
-    #
+    # variables
     PKG_NAME=$1
+    URL=$2
     
-    #
+    # Determin PKG_TYPE
+    FUNC_check_pkg_type ${URL}
     DEVTOOL_SRC_DIR="${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
     DEVTOOL_FEED_DIR="${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}"
 
-    # Determin PKG_TYPE
-    FUNC_check_pkg_devloping
+    devtool_print ${LOG_INFO} "PKG_TYPE=$PKG_TYPE"
 
     # Check if the package hasn't been developed
     case "${PKG_TYPE}" in
@@ -130,7 +147,17 @@ function FUNC_action_new(){
             FUNC_create_new_pkg_source
             FUNC_register_local_feed
             ;;
-            
+        
+        http )
+            FUNC_check_url_is_git_repo ${URL}
+            if [ "$RESULT" == "$RESULT_NOK" ]; then 
+                exit ${ERROR_NOT_GIT_REPO}
+            fi
+            FUNC_create_new_pkg
+            FUNC_create_new_pkg_source_remote
+            FUNC_register_local_feed
+            ;;
+
         * )
             echo "ERROR: package has been developed!!"
             exit ${ERROR_NEW_EXISTED_PKG}
