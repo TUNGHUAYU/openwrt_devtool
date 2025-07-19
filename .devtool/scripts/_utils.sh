@@ -79,13 +79,17 @@ function FUNC_create_folder(){
 
 # TUI: list options filtering by given pattern and assign value to the specific 
 # usage:
+# $1: list          : list all options
+# $2: search_path   : target search path
+# $3: message       : tui message
+# $4: format        : title format 
+# $5: title         : manual title
 function FUNC_tui_select(){
     local list=($1)
     local search_path=$2
     local message=$3
-    local format=${4:-'|%-03s|%-30s|%-50s \n'}
-    local _format=${5:-'|%-03d|%-30s|%-50s \n'}
-    local title=${6:-"No. PKG-NAME PKG-PATH"}
+    local format=${4:-'%-30s|%-50s \n'}
+    local title=${6:-"PKG-NAME PKG-PATH"}
 
     #
     [[ ${#list[@]} == 0 ]] && \
@@ -100,11 +104,11 @@ function FUNC_tui_select(){
 
     local i=1;
     echo "---"
-    printf "${format}" ${title}
+    printf "|%-5s|${format}" "No." ${title}
     echo
     for p in ${list[@]}
     do
-        printf "${_format}" "${i}" "${p##*/}" "${p/${search_path}/\$\{search_path\}\/}"
+        printf "|%-5d|${format}" "${i}" "${p##*/}" "${p/${search_path}/\$\{search_path\}\/}"
         i=$((i+1))
     done
     echo "---"
