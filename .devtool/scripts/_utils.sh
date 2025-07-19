@@ -147,3 +147,15 @@ function FUNC_check_git_conf(){
     # 
     RESULT=${RESULT_OK}
 }
+
+
+function FUNC_check_url_is_git_repo(){
+
+    local url=$1
+    RESULT=${RESULT_NOK}
+
+    if git ls-remote $url &> /dev/null; then
+        echo "Valid Git repository ${url}"
+        RESULT=${RESULT_OK}
+    fi
+}

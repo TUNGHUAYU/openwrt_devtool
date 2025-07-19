@@ -63,7 +63,8 @@ function FUNC_get_mod_pkg_list(){
     MOD_PKG_LIST="${mod_pkg_list}"
 }
 
-function FUNC_check_pkg_devloping(){
+function FUNC_check_pkg_type(){
+    local url=$URL
     local pkg_name=""
     echo $pkg_name
     PKG_TYPE="none"
@@ -87,4 +88,10 @@ function FUNC_check_pkg_devloping(){
             return
         fi
     done
+
+    # check if package is in http repository
+    if [[ "${url}" =~ "http" ]]; then
+        PKG_TYPE="http"
+        return
+    fi
 }
