@@ -34,10 +34,10 @@ function HELP(){
     devtool_print ${LOG_CORE} ""
     devtool_print ${LOG_CORE} "Commands: "
     devtool_print ${LOG_CORE} "---"
-    devtool_print ${LOG_CORE} "new    <pkg-name>      : New devtool package. <pkg-name>: new package name" 
-    devtool_print ${LOG_CORE} "modify [<pkg-pattern>] : Modify openwrt package. <pkg-pattern>: filter by given pattern"
-    devtool_print ${LOG_CORE} "abort                  : Abort developing devtool package"
-    devtool_print ${LOG_CORE} "list                   : List developing devtool packages"
+    devtool_print ${LOG_CORE} "new    <pkg-name> [<http-url>] : New devtool package."
+    devtool_print ${LOG_CORE} "modify [<pkg-pattern>]         : Modify openwrt package."
+    devtool_print ${LOG_CORE} "abort                          : Abort developing devtool package"
+    devtool_print ${LOG_CORE} "list                           : List developing devtool packages"
     devtool_print ${LOG_CORE} "---"
 }
 
