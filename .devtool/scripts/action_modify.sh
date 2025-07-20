@@ -119,7 +119,7 @@ function FUNC_action_modify(){
     PKG_NAME_PATTERN=$1
     
     # tui: package selection
-    local list="$( find -L ${OPENWRT_DIR}/package/feeds/ -iname makefile | grep ${PKG_NAME_PATTERN} | sed 's|/Makefile$||' )"
+    local list="$( find -L ${OPENWRT_DIR}/package/feeds/ -iname makefile | grep "${PKG_NAME_PATTERN}" | sed 's|/Makefile$||' )"
     FUNC_tui_select \
     "${list}" \
     "${OPENWRT_DIR}/package/feeds/" \
@@ -138,7 +138,7 @@ function FUNC_action_modify(){
     DEVTOOL_PKG_DIR="${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"
 
     # Determin PKG_TYPE
-    FUNC_check_pkg_devloping
+    FUNC_check_pkg_type
 
     # Check if the package hasn't been developed
     case "${PKG_TYPE}" in
