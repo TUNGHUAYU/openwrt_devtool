@@ -1,9 +1,14 @@
 History
-please see the [confluence
-page](https://arc-conf.arcadyan.com.tw/pages/viewpage.action?spaceKey=TERRYYU&title=Orange+-+openwrt-devtool) to know
-the details
 
-v.2.0.0:
+v2.1.0:
+
+Add new feature for new action.
+
+- Feature
+    - action
+        - new : Support reference source from remote git repository ( only support `http` url ) 
+
+v2.0.0:
 
 This major version changed architecture for expandable, flexiable, and modulization.
 Its change a lot of place including previous infrastructure.  

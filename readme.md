@@ -1,27 +1,25 @@
 # openwrt-devtool
 
-> author: Terry Yu ( terry_yu@arcadyan.com.tw )
+> author: Terry Yu
 >
-> version: v1.3.x
-
-
-Please contact with me or leave question in the below confluence page
-[Confluence page](https://arc-conf.arcadyan.com.tw/display/TERRYYU/Orange+-+openwrt-devtool)
-
+> version: v2.1.x
 
 ## Usage
 
 ``` bash
-    # List all developing packages
+    # List all packages in devtool workspace
     $ bash devtool.sh list
 
-    # New package ( prpl plugin )
-    $ bash devtool.sh add ${OPENWRT_DIR} ${PKG_NAME}
+    # New package
+    # Type 1: New package from local sample
+    $ bash devtool.sh add <pkg-name> 
+    # Type 2: New package from remote git repository ( only http url allowed )
+    $ bash devtool.sh add <pkg-name> <git-repo-http-url> 
 
     # Modify existed package 
-    $ bash devtool.sh modify ${OPENWRT_PKG_DIR}
+    $ bash devtool.sh modify [<search-pattern>]
 
-    # Abort the developing package
+    # Abort the developing package 
     $ bash devtool.sh abort ${OPENWRT_DIR} ${PKG_NAME} 
 ```
 
