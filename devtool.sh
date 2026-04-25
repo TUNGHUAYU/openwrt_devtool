@@ -3,8 +3,8 @@
 ###
 # Define very first and important variables
 ###
-DEVTOOL_DIR=${0%/*.sh}
-DEVTOOL_DIR=$(realpath ${DEVTOOL_DIR})
+DEVTOOL_DIR=$(dirname "$0")
+DEVTOOL_DIR=$(realpath "${DEVTOOL_DIR}")
 DEVTOOL_DIR=${DEVTOOL_DIR}
 DEVTOOL_CONF_PATH_FILE=${DEVTOOL_DIR}/.devtool/configs/path.conf
 
@@ -36,6 +36,7 @@ function HELP(){
     devtool_print ${LOG_CORE} "---"
     devtool_print ${LOG_CORE} "new    <pkg-name> [<http-url>] : New devtool package."
     devtool_print ${LOG_CORE} "modify [<pkg-pattern>]         : Modify openwrt package."
+    devtool_print ${LOG_CORE} "patch  <pkg-pattern> <base-ref>: Generate OpenWrt patches from source commits."
     devtool_print ${LOG_CORE} "abort                          : Abort developing devtool package"
     devtool_print ${LOG_CORE} "list                           : List developing devtool packages"
     devtool_print ${LOG_CORE} "---"
@@ -85,6 +86,14 @@ case "${COMMAND}" in
         source ${DEVTOOL_SCRIPT_ACTION_MODIFY}
         PKG_NAME_PATTERN=$2
         FUNC_action_modify ${PKG_NAME_PATTERN}
+        ;;
+    patch)
+        source ${DEVTOOL_SCRIPT_ACTION_PATCH}
+        [[ -z $2 ]] && HELP && exit ${ERROR_NO_PKG_NAME}
+        [[ -z $3 ]] && HELP && exit ${ERROR_NO_BASE_REF}
+        PKG_NAME_PATTERN=$2
+        BASE_REF=$3
+        FUNC_action_patch ${PKG_NAME_PATTERN} ${BASE_REF}
         ;;
     abort)
         source ${DEVTOOL_SCRIPT_ACTION_ABORT}

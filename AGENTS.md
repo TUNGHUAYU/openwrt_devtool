@@ -10,7 +10,9 @@
 - `bash devtool.sh list` lists packages currently tracked in the devtool workspace.
 - `bash devtool.sh new <pkg-name> [<http-url>]` creates a package from local templates or an HTTP git repository.
 - `bash devtool.sh modify [<pkg-pattern>]` copies an existing OpenWrt package into the workspace for development.
+- `bash devtool.sh patch <pkg-pattern> <base-ref>` appends source patches from modified package commits to `patches/`.
 - `bash devtool.sh abort` removes selected generated work after confirmation.
+- `bash tests/run_tests.sh` runs the Bash test suite.
 - `bash -n devtool.sh .devtool/scripts/*.sh` performs a Bash syntax check.
 
 There is no standalone repo build; package builds run through the configured OpenWrt tree.
@@ -21,7 +23,7 @@ Use Bash syntax consistent with existing files. Keep public helper functions in 
 
 ## Testing Guidelines
 
-No automated test suite is configured. For script changes, run the Bash syntax check and manually verify `help` and `list`. For workflow changes, test against a disposable OpenWrt checkout and temporary package workspace. Exercise both `new` and `modify` paths when changing shared helpers or workspace logic.
+For script changes, run `bash tests/run_tests.sh` and the Bash syntax check. For workflow changes, test against a disposable OpenWrt checkout and temporary package workspace. Exercise both `new` and `modify` paths when changing shared helpers or workspace logic.
 
 ## Commit & Pull Request Guidelines
 

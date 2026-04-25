@@ -13,7 +13,8 @@ bash -n \
     "${ROOT_DIR}/.devtool/scripts/action_abort.sh" \
     "${ROOT_DIR}/.devtool/scripts/action_list.sh" \
     "${ROOT_DIR}/.devtool/scripts/action_modify.sh" \
-    "${ROOT_DIR}/.devtool/scripts/action_new.sh" || status=$?
+    "${ROOT_DIR}/.devtool/scripts/action_new.sh" \
+    "${ROOT_DIR}/.devtool/scripts/action_patch.sh" || status=$?
 
 for test_file in "${ROOT_DIR}"/tests/test_*.sh; do
     bash "${test_file}" || status=$?
