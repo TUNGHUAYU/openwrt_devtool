@@ -47,12 +47,12 @@ function HELP(){
 
 # Check if OPENWRT_DIR assigned value
 FUNC_exist_openwrt_dir && \
-[[ ${RESULT} == ${RESULT_FLASE} ]] && \
+[[ ${RESULT} == ${RESULT_FALSE} ]] && \
 FUNC_init
 
 # Check if OPENWRT_DIR is legal
 FUNC_is_openwrt_dir && \
-[[ ${RESULT} == ${RESULT_FLASE} ]] && \
+[[ ${RESULT} == ${RESULT_FALSE} ]] && \
 exit ${ERROR_FILE_NO_EXIST}
 
 # Check if git config exist

@@ -134,7 +134,7 @@ function FUNC_check_git_conf(){
     local author_email=$(git config --global user.email)
 
     # Check
-    if [ -z ${author_name} ] || [ -z ${author_email} ]; then
+    if [ -z "${author_name}" ] || [ -z "${author_email}" ]; then
         echo "ERROR: No git config name or email"
         echo "please git --global config user.name <name>"
         echo "please git --global config user.email <email>"

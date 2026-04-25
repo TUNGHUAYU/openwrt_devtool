@@ -5,7 +5,7 @@
 FUNC_exist_openwrt_dir(){
     if [[ -z ${OPENWRT_DIR} ]]; then
         devtool_print $LOG_INFO "OPENWRT_DIR is unset"
-        RESULT=${RESULT_FLASE}
+        RESULT=${RESULT_FALSE}
     else
         devtool_print $LOG_INFO "OPENWRT_DIR=${OPENWRT_DIR}"
         RESULT=${RESULT_TRUE}
@@ -19,7 +19,7 @@ FUNC_is_openwrt_dir(){
     # check if the path is legal
     if [[ ! -d ${OPENWRT_DIR} ]]; then
         devtool_print "$LOG_ERRO" "illegal OPENWRT DIR path: ${OPENWRT_DIR}"
-        RESULT=${RESULT_FLASE}
+        RESULT=${RESULT_FALSE}
     else
         devtool_print "$LOG_INFO" "legal OPENWRT DIR path: ${OPENWRT_DIR}"
         RESULT=${RESULT_TRUE}
