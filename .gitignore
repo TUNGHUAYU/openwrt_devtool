@@ -1,2 +1,4 @@
 workspace
 .openwrt_dir
+.devtool/openwrt/utils/download.pl
+.devtool/openwrt/utils/projectsmirrors.json

@@ -70,16 +70,54 @@ function FUNC_parse_url(){
     fi
 }
 
-function FUNC_find_prepared_src_dir(){
-    local build_dir="${OPENWRT_DIR}/build_dir"
-    local prepared_dir=""
+function FUNC_read_pkg_var(){
+    local name=$1
+    local file_path=${2:-${OPENWRT_PKG_DIR}/Makefile}
 
-    prepared_dir=$(find "${build_dir}" -path "*/target-*" -type d -name "${PKG_NAME}*${PKG_SOURCE_URL_GIT_BRANCH}*" 2>/dev/null | sort | tail -n 1)
-    if [[ -z ${prepared_dir} ]]; then
-        prepared_dir=$(find "${build_dir}" -path "*/target-*" -type d -name "${PKG_NAME}*" 2>/dev/null | sort | tail -n 1)
+    RESULT=$(sed -E -n "s|^[[:space:]]*${name}[[:space:]]*:?=[[:space:]]*(.*)|\1|p" "${file_path}" | head -n 1)
+}
+
+function FUNC_resolve_pkg_expr(){
+    local expr=$1
+
+    expr=${expr//\$\(PKG_NAME\)/${PKG_NAME}}
+    expr=${expr//\$\(PKG_VERSION\)/${PKG_SOURCE_URL_GIT_BRANCH}}
+    expr=${expr//\$\{PKG_NAME\}/${PKG_NAME}}
+    expr=${expr//\$\{PKG_VERSION\}/${PKG_SOURCE_URL_GIT_BRANCH}}
+    RESULT=${expr}
+}
+
+function FUNC_setup_download_pl(){
+    local utils_dir="${DEVTOOL_DIR}/.devtool/openwrt/utils"
+    local src="${OPENWRT_DIR}/scripts/download.pl"
+    local dst="${utils_dir}/download.pl"
+    local mirrors_src="${OPENWRT_DIR}/scripts/projectsmirrors.json"
+    local mirrors_dst="${utils_dir}/projectsmirrors.json"
+
+    if [[ ! -f "${src}" ]]; then
+        echo "ERROR: OpenWrt download.pl not found: ${src}"
+        return ${ERROR_FILE_NO_EXIST}
+    fi
+    if [[ ! -f "${mirrors_src}" ]]; then
+        echo "ERROR: OpenWrt projectsmirrors.json not found: ${mirrors_src}"
+        return ${ERROR_FILE_NO_EXIST}
     fi
 
-    RESULT=${prepared_dir}
+    mkdir -p "${utils_dir}"
+    ln -sfn "${src}" "${dst}"
+    ln -sfn "${mirrors_src}" "${mirrors_dst}"
+    RESULT=${dst}
+}
+
+function FUNC_find_mkhash(){
+    local mkhash="${OPENWRT_DIR}/staging_dir/host/bin/mkhash"
+
+    if [[ ! -x "${mkhash}" ]]; then
+        echo "ERROR: OpenWrt mkhash not found: ${mkhash}"
+        return ${ERROR_FILE_NO_EXIST}
+    fi
+
+    RESULT=${mkhash}
 }
 
 function FUNC_init_workspace_src_git(){
@@ -106,28 +144,168 @@ function FUNC_create_workspace_src_dir_git(){
     git checkout -b dev ref-base || return $?
 }
 
-function FUNC_create_workspace_src_dir_tarball(){
+function FUNC_unpack_source_archive(){
     local path=$1
-    local prepared_dir=""
+    local source_file=""
+    local archive_path=""
+    local tmp_dir=""
+    local top_entries=""
+    local top_entry_count=0
+    local top_entry=""
 
-    echo "make -C ${OPENWRT_DIR} package/${PKG_PATH}/prepare V=s"
-    make -C "${OPENWRT_DIR}" "package/${PKG_PATH}/prepare" V=s || return $?
-
-    FUNC_find_prepared_src_dir
-    prepared_dir=${RESULT}
-    if [[ -z ${prepared_dir} ]] || [[ ! -d ${prepared_dir} ]]; then
-        echo "ERROR: prepared source directory not found for ${PKG_NAME}"
+    source_file=$2
+    archive_path="${OPENWRT_DIR}/dl/${source_file}"
+    if [[ ! -f "${archive_path}" ]]; then
+        echo "ERROR: downloaded source file not found: ${archive_path}"
         return ${ERROR_FILE_NO_EXIST}
     fi
 
-    echo "cp -r ${prepared_dir}/. ${path}/"
-    cp -r "${prepared_dir}/." "${path}/" || return $?
+    tmp_dir="${DEVTOOL_WORKSPACE_SRC_DIR}/.tmp-${PKG_NAME}"
+    rm -rf "${tmp_dir}"
+    mkdir -p "${tmp_dir}"
+
+    case "${source_file}" in
+        *.tar.gz|*.tgz)
+            tar -xzf "${archive_path}" -C "${tmp_dir}" || return $?
+            ;;
+        *.tar.bz2|*.tbz|*.tbz2)
+            tar -xjf "${archive_path}" -C "${tmp_dir}" || return $?
+            ;;
+        *.tar.xz|*.txz)
+            tar -xJf "${archive_path}" -C "${tmp_dir}" || return $?
+            ;;
+        *.tar.zst|*.tzst)
+            tar --zstd -xf "${archive_path}" -C "${tmp_dir}" || return $?
+            ;;
+        *.tar)
+            tar -xf "${archive_path}" -C "${tmp_dir}" || return $?
+            ;;
+        *.zip)
+            unzip -q "${archive_path}" -d "${tmp_dir}" || return $?
+            ;;
+        *.cpio)
+            ( cd "${tmp_dir}" && cpio -id < "${archive_path}" ) || return $?
+            ;;
+        *)
+            echo "ERROR: unsupported archive type: ${source_file}"
+            return ${ERROR_FILE_NO_EXIST}
+            ;;
+    esac
+
+    top_entries=$(find "${tmp_dir}" -mindepth 1 -maxdepth 1 -print)
+    top_entry_count=$(find "${tmp_dir}" -mindepth 1 -maxdepth 1 -print | wc -l)
+    if [[ ${top_entry_count} -eq 0 ]]; then
+        echo "ERROR: archive is empty: ${archive_path}"
+        return ${ERROR_FILE_NO_EXIST}
+    fi
+
+    if [[ ${top_entry_count} -eq 1 ]]; then
+        top_entry=${top_entries}
+        if [[ -d ${top_entry} ]]; then
+            cp -r "${top_entry}/." "${path}/" || return $?
+        else
+            cp -r "${top_entry}" "${path}/" || return $?
+        fi
+    else
+        cp -r "${tmp_dir}/." "${path}/" || return $?
+    fi
+
+    rm -rf "${tmp_dir}"
+}
+
+function FUNC_source_uses_openwrt_download(){
+    local source_url=$1
+    local source_proto=$2
+
+    RESULT=${RESULT_FALSE}
+    case "${source_proto}" in
+        git|svn|hg|bzr|cvs|darcs)
+            RESULT=${RESULT_TRUE}
+            return
+            ;;
+    esac
+
+    if [[ ${source_url} == git@* ]] || [[ ${source_url} == git://* ]] || [[ ${source_url} == *".git"* ]]; then
+        RESULT=${RESULT_TRUE}
+    fi
+}
+
+function FUNC_create_workspace_src_dir_archive(){
+    local path=$1
+    local pkg_source=""
+    local pkg_hash=""
+    local pkg_md5sum=""
+    local pkg_mirror_hash=""
+    local pkg_source_url_file=""
+    local pkg_source_url=""
+    local pkg_source_proto=""
+    local source_file=""
+    local url_file=""
+    local download_pl=""
+    local mkhash=""
+    local download_check_certificate="${DOWNLOAD_CHECK_CERTIFICATE:-n}"
+
+    FUNC_read_pkg_var "PKG_SOURCE"
+    pkg_source=${RESULT}
+    FUNC_resolve_pkg_expr "${pkg_source}"
+    pkg_source=${RESULT}
+    if [[ -z ${pkg_source} ]]; then
+        echo "ERROR: PKG_SOURCE is required for archive source setup"
+        return ${ERROR_FILE_NO_EXIST}
+    fi
+
+    FUNC_read_pkg_var "PKG_HASH"
+    pkg_hash=${RESULT}
+    FUNC_read_pkg_var "PKG_MD5SUM"
+    pkg_md5sum=${RESULT}
+    FUNC_read_pkg_var "PKG_MIRROR_HASH"
+    pkg_mirror_hash=${RESULT}
+    [[ -z ${pkg_hash} ]] && pkg_hash=${pkg_md5sum}
+    [[ -z ${pkg_hash} ]] && pkg_hash=${pkg_mirror_hash}
+    [[ -z ${pkg_hash} ]] && pkg_hash="skip"
+
+    FUNC_read_pkg_var "PKG_SOURCE_URL_FILE"
+    pkg_source_url_file=${RESULT}
+    FUNC_resolve_pkg_expr "${pkg_source_url_file}"
+    pkg_source_url_file=${RESULT}
+
+    FUNC_read_pkg_var "PKG_SOURCE_URL"
+    pkg_source_url=${RESULT}
+    FUNC_read_pkg_var "PKG_SOURCE_PROTO"
+    pkg_source_proto=${RESULT}
+
+    source_file=${pkg_source}
+    url_file=${pkg_source_url_file}
+    [[ -n ${pkg_source_url_file} ]] && source_file=${pkg_source_url_file}
+
+    FUNC_source_uses_openwrt_download "${pkg_source_url}" "${pkg_source_proto}"
+    if [[ ${RESULT} == ${RESULT_TRUE} ]]; then
+        echo "make -C ${OPENWRT_DIR} package/${PKG_PATH}/download"
+        make -C "${OPENWRT_DIR}" "package/${PKG_PATH}/download" || return $?
+        source_file=${pkg_source}
+    else
+        FUNC_setup_download_pl || return $?
+        download_pl=${RESULT}
+        FUNC_find_mkhash || return $?
+        mkhash=${RESULT}
+
+        echo "${download_pl} ${OPENWRT_DIR}/dl ${source_file} ${pkg_hash} ${url_file} ${PKG_SOURCE_URL_TARBALL}"
+        DOWNLOAD_CHECK_CERTIFICATE="${download_check_certificate}" \
+        DOWNLOAD_TOOL_CUSTOM="${DOWNLOAD_TOOL_CUSTOM:-}" \
+        TOPDIR="${OPENWRT_DIR}" \
+        MKHASH="${mkhash}" \
+        "${download_pl}" "${OPENWRT_DIR}/dl" "${source_file}" "${pkg_hash}" "${url_file}" "${PKG_SOURCE_URL_TARBALL}" || return $?
+    fi
+
+    FUNC_unpack_source_archive "${path}" "${source_file}" || return $?
     FUNC_init_workspace_src_git "${path}" || return $?
 }
 
 function FUNC_create_workspace_src_dir(){
 
     local path="${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
+    local old_pwd=$(pwd)
+    local status=0
 
     FUNC_is_folder_existed "${path}"
     FUNC_create_folder "${path}"
@@ -138,20 +316,24 @@ function FUNC_create_workspace_src_dir(){
     FUNC_parse_url ${pkg_source_url}
     
     # Move to source director
-    cd ${path}
+    cd "${path}" || return $?
 
     case "${PKG_SOURCE_URL_TYPE}" in
-        git|archive)
-            FUNC_create_workspace_src_dir_git "${path}"
-            ;;
-        tarball)
-            FUNC_create_workspace_src_dir_tarball "${path}"
+        git|archive|tarball)
+            FUNC_create_workspace_src_dir_archive "${path}"
+            status=$?
             ;;
         *)
             echo "ERROR: unsupported PKG_SOURCE_URL=${pkg_source_url}"
-            return ${ERROR_NOT_GIT_REPO}
+            status=${ERROR_NOT_GIT_REPO}
             ;;
     esac
+
+    cd "${old_pwd}" || return $?
+    if [[ ${status} -ne 0 ]]; then
+        rm -rf "${path}" "${DEVTOOL_WORKSPACE_SRC_DIR}/.tmp-${PKG_NAME}"
+        return ${status}
+    fi
 }
 
 function FUNC_symlink_pkg_dir(){
@@ -164,12 +346,13 @@ function FUNC_symlink_pkg_dir(){
 function FUNC_redirect_src_pkg_url(){
 
     local path="${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
+    local old_pwd=$(pwd)
 
 
     cd "${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"
 
-    # comment all variable with leading "PKG_"
-    sed -i "/^PKG_.*=/ s/^/# /"                             Makefile
+    # comment only source and package identity variables replaced by devtool
+    sed -i -E "/^[[:space:]]*(PKG_NAME|PKG_VERSION|PKG_RELEASE|PKG_SOURCE|PKG_SOURCE_URL|PKG_SOURCE_PROTO|PKG_SOURCE_VERSION|PKG_SOURCE_URL_FILE|PKG_SOURCE_SUBDIR|PKG_SOURCE_DATE|PKG_SOURCE_MIRROR|PKG_SOURCE_SUBMODULES|PKG_HASH|PKG_MD5SUM|PKG_MIRROR_HASH)[[:space:]]*:?=/ s/^/# /" Makefile
 
     # insert redirection necessary variables
     sed -i "1i \\
@@ -183,6 +366,7 @@ function FUNC_redirect_src_pkg_url(){
     PKG_RELEASE:=1\\
     ###########################################" Makefile 
 
+    cd "${old_pwd}" || return $?
 }
 
 function FUNC_modify_dry_run_plan(){
@@ -196,15 +380,21 @@ function FUNC_modify_dry_run_plan(){
     echo "workspace original backup: ${DEVTOOL_WORKSPACE_ORIPKG_DIR}/${PKG_PATH}"
     echo "workspace source: ${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
     if [[ "${PKG_SOURCE_URL_TYPE}" == "tarball" ]]; then
-        echo "prepare tarball source with OpenWrt: make -C ${OPENWRT_DIR} package/${PKG_PATH}/prepare V=s"
+        FUNC_read_pkg_var "PKG_SOURCE"
+        FUNC_resolve_pkg_expr "${RESULT}"
+        echo "download tarball source with ${DEVTOOL_DIR}/.devtool/openwrt/utils/download.pl"
+        echo "download destination: ${OPENWRT_DIR}/dl/${RESULT}"
+        echo "unpack source into ${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
     else
-        echo "clone source repository: ${PKG_SOURCE_URL_GIT}"
+        echo "download source archive with make -C ${OPENWRT_DIR} package/${PKG_PATH}/download"
+        echo "unpack source archive into ${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
     fi
     echo "create ref-base branch at ${PKG_SOURCE_URL_GIT_BRANCH}"
     echo "checkout dev branch from ref-base"
     echo "replace OpenWrt package with symlink to workspace package"
     echo "rewrite Makefile with PKG_SOURCE_URL:=file://${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
     echo "rewrite Makefile with PKG_SOURCE_VERSION:=ref-base"
+    echo "preserve build metadata such as PKG_INSTALL, PKG_FIXUP, and PKG_BUILD_FLAGS"
 }
 
 function FUNC_action_modify(){
