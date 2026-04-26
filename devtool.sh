@@ -104,10 +104,9 @@ case "${COMMAND}" in
         ;;
     patch)
         source ${DEVTOOL_SCRIPT_ACTION_PATCH}
-        [[ -z $2 ]] && HELP && exit ${ERROR_NO_PKG_NAME}
-        PKG_NAME_PATTERN=$2
-        BASE_REF=${3:-ref-base}
-        FUNC_action_patch ${PKG_NAME_PATTERN} ${BASE_REF}
+        PKG_NAME_PATTERN=${2:-}
+        BASE_REF=${3:-}
+        FUNC_action_patch "${PKG_NAME_PATTERN}" "${BASE_REF}"
         ;;
     abort)
         source ${DEVTOOL_SCRIPT_ACTION_ABORT}

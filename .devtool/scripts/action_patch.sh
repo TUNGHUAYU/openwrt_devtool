@@ -15,14 +15,15 @@ function FUNC_patch_select_pkg(){
     done
 
     if [[ ${match_count} -eq 0 ]]; then
-        devtool_print "${LOG_ERRO}" "No matching modified package!!"
-        RESULT=""
-        return ${ERROR_NO_MATCHING_PKG}
-    fi
+        if [[ -n ${pkg_name_pattern} ]] && [[ -n ${MOD_PKG_LIST} ]]; then
+            devtool_print "${LOG_WARN}" "No package matched \"%s\"; showing all modified packages." "${pkg_name_pattern}"
+            match_list="${MOD_PKG_LIST}"
+        else
+            devtool_print "${LOG_ERRO}" "No matching modified package!!"
+            RESULT=""
+            return ${ERROR_NO_MATCHING_PKG}
+        fi
 
-    if [[ ${match_count} -eq 1 ]]; then
-        RESULT="${match_list# }"
-        return ${RESULT_OK}
     fi
 
     FUNC_tui_select \
@@ -49,31 +50,18 @@ function FUNC_patch_list_candidates(){
     done
 }
 
-function FUNC_patch_next_start_number(){
-    local patch_dir=$1
-    local max=0
-    local patch_file=""
-    local patch_name=""
-    local patch_num=""
+function FUNC_patch_read_base_ref(){
+    local makefile=$1
 
-    for patch_file in "${patch_dir}"/[0-9][0-9][0-9]-*.patch
-    do
-        [[ -e ${patch_file} ]] || continue
-        patch_name=${patch_file##*/}
-        patch_num=${patch_name%%-*}
-        if (( 10#${patch_num} > max )); then
-            max=$((10#${patch_num}))
-        fi
-    done
-
-    RESULT=$((max + 1))
+    RESULT=$(sed -E -n "s|^[[:space:]]*PKG_SOURCE_VERSION[[:space:]]*:?=[[:space:]]*(.*)|\1|p" "${makefile}" | head -n 1)
+    [[ -z ${RESULT} ]] && RESULT="ref-base"
 }
 
 function FUNC_patch_generate(){
     local src_dir=$1
     local patch_dir=$2
     local base_ref=$3
-    local start_number=$4
+    local target_ref=$4
     local output=""
     local status=0
     local generated_file=""
@@ -85,9 +73,9 @@ function FUNC_patch_generate(){
 
     mkdir -p "${patch_dir}"
     output=$(git -C "${src_dir}" format-patch \
-        --start-number "${start_number}" \
+        --start-number 1 \
         -o "${patch_dir}" \
-        "${base_ref}..HEAD")
+        "${base_ref}..${target_ref}")
     status=$?
     [[ ${status} -ne 0 ]] && return ${status}
 
@@ -102,26 +90,69 @@ function FUNC_patch_generate(){
             normalized_name=$(printf "%03d-%s" "$((10#${patch_num}))" "${patch_subject}")
             normalized_file="${patch_dir}/${normalized_name}"
             mv "${generated_file}" "${normalized_file}"
-            echo "${normalized_file}"
-        else
-            echo "${generated_file}"
         fi
     done <<< "${output}"
 }
 
+function FUNC_patch_dirs_synced(){
+    local current_dir=$1
+    local generated_dir=$2
+    local current_list=""
+    local generated_list=""
+    local patch_file=""
+    local patch_name=""
+
+    current_list=$(find "${current_dir}" -maxdepth 1 -name '*.patch' -type f -printf '%f\n' 2>/dev/null | sort)
+    generated_list=$(find "${generated_dir}" -maxdepth 1 -name '*.patch' -type f -printf '%f\n' 2>/dev/null | sort)
+
+    if [[ "${current_list}" != "${generated_list}" ]]; then
+        RESULT=${RESULT_FALSE}
+        return
+    fi
+
+    while IFS= read -r patch_name
+    do
+        [[ -n ${patch_name} ]] || continue
+        if ! cmp -s "${current_dir}/${patch_name}" "${generated_dir}/${patch_name}"; then
+            RESULT=${RESULT_FALSE}
+            return
+        fi
+    done <<< "${generated_list}"
+
+    RESULT=${RESULT_TRUE}
+}
+
+function FUNC_patch_replace_dir(){
+    local current_dir=$1
+    local generated_dir=$2
+    local patch_file=""
+
+    mkdir -p "${current_dir}"
+    find "${current_dir}" -maxdepth 1 -name '*.patch' -type f -delete
+    for patch_file in "${generated_dir}"/*.patch
+    do
+        [[ -e ${patch_file} ]] || continue
+        cp "${patch_file}" "${current_dir}/"
+    done
+}
+
+function FUNC_patch_print_final_paths(){
+    local patch_dir=$1
+    local patch_file=""
+
+    for patch_file in "${patch_dir}"/*.patch
+    do
+        [[ -e ${patch_file} ]] || continue
+        devtool_print "${LOG_CORE}" "%s" "${patch_file}"
+    done
+}
+
 function FUNC_action_patch(){
     local pkg_name_pattern=$1
-    local base_ref=${2:-ref-base}
-
-    if [[ -z "${pkg_name_pattern}" ]]; then
-        FUNC_patch_list_candidates
-        return ${RESULT_OK}
-    fi
-
-    if [[ -z ${base_ref} ]]; then
-        devtool_print "${LOG_ERRO}" "Missing base ref"
-        return ${ERROR_NO_BASE_REF}
-    fi
+    local base_ref=${2:-}
+    local target_ref=${DEV_BRANCH:-dev}
+    local tmp_patch_dir=""
+    local status=0
 
     FUNC_patch_select_pkg "${pkg_name_pattern}" || return $?
 
@@ -142,6 +173,29 @@ function FUNC_action_patch(){
         return ${ERROR_FILE_NO_EXIST}
     fi
 
-    FUNC_patch_next_start_number "${PATCH_DIR}"
-    FUNC_patch_generate "${DEVTOOL_SRC_DIR}" "${PATCH_DIR}" "${base_ref}" "${RESULT}"
+    if [[ -z ${base_ref} ]]; then
+        FUNC_patch_read_base_ref "${DEVTOOL_PKG_DIR}/Makefile"
+        base_ref=${RESULT}
+    fi
+
+    mkdir -p "${PATCH_DIR}"
+    tmp_patch_dir=$(mktemp -d "${PATCH_DIR}/.devtool-patches.XXXXXX")
+    FUNC_patch_generate "${DEVTOOL_SRC_DIR}" "${tmp_patch_dir}" "${base_ref}" "${target_ref}"
+    status=$?
+    if [[ ${status} -ne 0 ]]; then
+        rm -rf "${tmp_patch_dir}"
+        return ${status}
+    fi
+
+    FUNC_patch_dirs_synced "${PATCH_DIR}" "${tmp_patch_dir}"
+    if [[ ${RESULT} == ${RESULT_TRUE} ]]; then
+        rm -rf "${tmp_patch_dir}"
+        devtool_print "${LOG_INFO}" "Patch files are synchronized."
+        FUNC_patch_print_final_paths "${PATCH_DIR}"
+        return ${RESULT_OK}
+    fi
+
+    FUNC_patch_replace_dir "${PATCH_DIR}" "${tmp_patch_dir}"
+    rm -rf "${tmp_patch_dir}"
+    FUNC_patch_print_final_paths "${PATCH_DIR}"
 }
