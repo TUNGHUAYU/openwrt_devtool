@@ -107,8 +107,25 @@ test_patch_action_defaults_to_ref_base(){
     with_temp_repo test_patch_action_defaults_to_ref_base_impl
 }
 
+test_patch_action_lists_modified_candidates_without_pattern(){
+    DEVTOOL_DIR="/repo"
+    DEVTOOL_WORKSPACE_PKG_DIR="/repo/workspace/PACKAGES"
+    MOD_PKG_LIST="/repo/workspace/PACKAGES/feeds/feed_prplos/pkg_one /repo/workspace/PACKAGES/feeds/feed_lcm/pkg_two"
+
+    local output
+    output=$(FUNC_action_patch "")
+
+    assert_contains "${output}" "PKG-NAME" &&
+    assert_contains "${output}" "pkg_one" &&
+    assert_contains "${output}" "pkg_two" &&
+    assert_contains "${output}" "modify" &&
+    assert_contains "${output}" "workspace/PACKAGES/feeds/feed_prplos/pkg_one" &&
+    assert_contains "${output}" "workspace/PACKAGES/feeds/feed_lcm/pkg_two"
+}
+
 test_case "patch action generates OpenWrt patch" test_patch_action_generates_openwrt_patch
 test_case "patch action appends after existing patches" test_patch_action_appends_after_existing_patch
 test_case "patch action requires source git repo" test_patch_action_requires_source_git_repo
 test_case "patch action defaults base ref to ref-base" test_patch_action_defaults_to_ref_base
+test_case "patch action lists modified candidates without pattern" test_patch_action_lists_modified_candidates_without_pattern
 finish_tests

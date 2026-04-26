@@ -34,6 +34,22 @@ function FUNC_patch_select_pkg(){
     ""
 }
 
+function FUNC_patch_list_candidates(){
+    local count=0
+    local type="modify"
+    local format="|%-03s|%-30s|%-10s|%-50s \n"
+    local _format="|%-03d|%-30s|%-10s|%-50s \n"
+
+    printf "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
+    printf "\n"
+
+    for p in ${MOD_PKG_LIST}
+    do
+        count=$(( count + 1 ))
+        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p/${DEVTOOL_DIR}\//}"
+    done
+}
+
 function FUNC_patch_next_start_number(){
     local patch_dir=$1
     local max=0
@@ -97,6 +113,11 @@ function FUNC_patch_generate(){
 function FUNC_action_patch(){
     local pkg_name_pattern=$1
     local base_ref=${2:-ref-base}
+
+    if [[ -z "${pkg_name_pattern}" ]]; then
+        FUNC_patch_list_candidates
+        return ${RESULT_OK}
+    fi
 
     if [[ -z ${base_ref} ]]; then
         devtool_print "${LOG_ERRO}" "Missing base ref"

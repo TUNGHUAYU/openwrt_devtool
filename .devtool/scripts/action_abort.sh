@@ -33,15 +33,15 @@ FUNC_abort_mod_pkg_work(){
     local path=""
 
     # 1. remove openwrt pkg dir
-    OPENWRT_PKG_DIR=$(find "${OPENWRT_DIR}/package" -name ${PKG_NAME})
+    OPENWRT_PKG_DIR=$(find "${OPENWRT_DIR}/package" -name "${PKG_NAME}")
     echo "rm -rf ${OPENWRT_PKG_DIR}"
     rm -rf ${OPENWRT_PKG_DIR}
 
     # 2. restore origin openwrt pkg dir from workspace backup dir ( PACKAGE_ORIGIN/ )
     local symlink_path=""
-    path=$(find "${DEVTOOL_WORKSPACE_ORIPKG_DIR}" -name ${PKG_NAME})
-    if [[ -h ${path} ]]; then
-        symlink_path=$(readlink ${path})
+    path=$(find "${DEVTOOL_WORKSPACE_ORIPKG_DIR}" -name "${PKG_NAME}")
+    if [[ -L "${path}" ]]; then
+        symlink_path=$(readlink "${path}")
         echo "ln -s ${symlink_path} ${OPENWRT_PKG_DIR}"
         ln -s ${symlink_path} ${OPENWRT_PKG_DIR}
     else
@@ -49,23 +49,28 @@ FUNC_abort_mod_pkg_work(){
         cp -r ${path} ${OPENWRT_PKG_DIR}
     fi
 
-    [[ -e ${path} ]] && echo "rm -rf ${path}" # remove workspace pkg ori dir
-    [[ -e ${path} ]] && rm -rf ${path}
+    if [[ -L "${path}" ]]; then
+        echo "rm -f ${path}" # remove workspace pkg ori symlink
+        rm -f "${path}"
+    elif [[ -e "${path}" ]]; then
+        echo "rm -rf ${path}" # remove workspace pkg ori dir
+        rm -rf "${path}"
+    fi
 
     # 3. remove worksapce pkg dir
-    path=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}" -name ${PKG_NAME})
-    [[ -e ${path} ]] && echo "rm -rf ${path}"
-    [[ -e ${path} ]] && rm -rf ${path}
+    path=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}" -name "${PKG_NAME}")
+    [[ -e "${path}" ]] && echo "rm -rf ${path}"
+    [[ -e "${path}" ]] && rm -rf "${path}"
 
     # 4. remove worksapce src dir
-    path=$(find "${DEVTOOL_WORKSPACE_SRC_DIR}" -name ${PKG_NAME})
-    [[ -e ${path} ]] && echo "rm -rf ${path}"
-    [[ -e ${path} ]] && rm -rf ${path}
+    path=$(find "${DEVTOOL_WORKSPACE_SRC_DIR}" -name "${PKG_NAME}")
+    [[ -e "${path}" ]] && echo "rm -rf ${path}"
+    [[ -e "${path}" ]] && rm -rf "${path}"
 
     # 5. remove temporary config (<openwrt>/tmp/)
     path=$(find "${OPENWRT_DIR}/tmp/info" -name ".packageinfo-*${PKG_NAME}")
-    [[ -f ${path} ]] && echo "rm ${path}"
-    [[ -f ${path} ]] && rm ${path}
+    [[ -f "${path}" ]] && echo "rm ${path}"
+    [[ -f "${path}" ]] && rm "${path}"
 }
 
 function FUNC_action_abort(){
