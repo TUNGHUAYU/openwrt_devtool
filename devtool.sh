@@ -35,8 +35,8 @@ function HELP(){
     devtool_print ${LOG_CORE} "Commands: "
     devtool_print ${LOG_CORE} "---"
     devtool_print ${LOG_CORE} "new    <pkg-name> [<http-url>] : New devtool package."
-    devtool_print ${LOG_CORE} "modify [<pkg-pattern>]         : Modify openwrt package."
-    devtool_print ${LOG_CORE} "patch  <pkg-pattern> <base-ref>: Generate OpenWrt patches from source commits."
+    devtool_print ${LOG_CORE} "modify [<pkg-pattern>] [--dry-run] : Modify openwrt package."
+    devtool_print ${LOG_CORE} "patch  <pkg-pattern> [<base-ref>] : Generate OpenWrt patches from source commits."
     devtool_print ${LOG_CORE} "abort                          : Abort developing devtool package"
     devtool_print ${LOG_CORE} "list                           : List developing devtool packages"
     devtool_print ${LOG_CORE} "---"
@@ -84,15 +84,20 @@ case "${COMMAND}" in
         ;;
     modify)
         source ${DEVTOOL_SCRIPT_ACTION_MODIFY}
-        PKG_NAME_PATTERN=$2
-        FUNC_action_modify ${PKG_NAME_PATTERN}
+        if [[ "$2" == "--dry-run" ]]; then
+            PKG_NAME_PATTERN=""
+            MODIFY_DRY_RUN="--dry-run"
+        else
+            PKG_NAME_PATTERN=$2
+            MODIFY_DRY_RUN=$3
+        fi
+        FUNC_action_modify "${PKG_NAME_PATTERN}" "${MODIFY_DRY_RUN}"
         ;;
     patch)
         source ${DEVTOOL_SCRIPT_ACTION_PATCH}
         [[ -z $2 ]] && HELP && exit ${ERROR_NO_PKG_NAME}
-        [[ -z $3 ]] && HELP && exit ${ERROR_NO_BASE_REF}
         PKG_NAME_PATTERN=$2
-        BASE_REF=$3
+        BASE_REF=${3:-ref-base}
         FUNC_action_patch ${PKG_NAME_PATTERN} ${BASE_REF}
         ;;
     abort)

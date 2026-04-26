@@ -9,8 +9,8 @@
 - `bash devtool.sh help` shows available commands after repository/OpenWrt checks pass.
 - `bash devtool.sh list` lists packages currently tracked in the devtool workspace.
 - `bash devtool.sh new <pkg-name> [<http-url>]` creates a package from local templates or an HTTP git repository.
-- `bash devtool.sh modify [<pkg-pattern>]` copies an existing OpenWrt package into the workspace for development.
-- `bash devtool.sh patch <pkg-pattern> <base-ref>` appends source patches from modified package commits to `patches/`.
+- `bash devtool.sh modify [<pkg-pattern>] [--dry-run]` copies an existing package, creates `ref-base` and `dev`, and leaves `HEAD` on `dev`.
+- `bash devtool.sh patch <pkg-pattern> [<base-ref>]` appends source patches from modified package commits to `patches/`; omitted base defaults to `ref-base`.
 - `bash devtool.sh abort` removes selected generated work after confirmation.
 - `bash tests/run_tests.sh` runs the Bash test suite.
 - `bash -n devtool.sh .devtool/scripts/*.sh` performs a Bash syntax check.

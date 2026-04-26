@@ -96,7 +96,7 @@ function FUNC_patch_generate(){
 
 function FUNC_action_patch(){
     local pkg_name_pattern=$1
-    local base_ref=$2
+    local base_ref=${2:-ref-base}
 
     if [[ -z ${base_ref} ]]; then
         devtool_print "${LOG_ERRO}" "Missing base ref"

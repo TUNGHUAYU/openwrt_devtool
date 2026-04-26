@@ -23,6 +23,7 @@ create_patch_fixture(){
     git -C "${src_dir}" add feature.txt
     git -C "${src_dir}" commit -m "base commit" >/dev/null
     BASE_REF=$(git -C "${src_dir}" rev-parse HEAD)
+    git -C "${src_dir}" branch ref-base "${BASE_REF}"
     printf "base\nfeature\n" > "${src_dir}/feature.txt"
     git -C "${src_dir}" add feature.txt
     git -C "${src_dir}" commit -m "add feature" >/dev/null
@@ -71,20 +72,6 @@ test_patch_action_appends_after_existing_patch(){
     with_temp_repo test_patch_action_appends_after_existing_patch_impl
 }
 
-test_patch_action_requires_base_ref_impl(){
-    local tmpdir=$1
-    create_patch_fixture "${tmpdir}"
-
-    FUNC_action_patch "${PKG_PATTERN}" "" >/dev/null
-    local status=$?
-
-    assert_status "${ERROR_NO_BASE_REF}" "${status}"
-}
-
-test_patch_action_requires_base_ref(){
-    with_temp_repo test_patch_action_requires_base_ref_impl
-}
-
 test_patch_action_requires_source_git_repo_impl(){
     local tmpdir=$1
     local pkg_dir="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
@@ -104,8 +91,24 @@ test_patch_action_requires_source_git_repo(){
     with_temp_repo test_patch_action_requires_source_git_repo_impl
 }
 
+test_patch_action_defaults_to_ref_base_impl(){
+    local tmpdir=$1
+    create_patch_fixture "${tmpdir}"
+
+    FUNC_action_patch "${PKG_PATTERN}" >/dev/null
+
+    local patch_file
+    patch_file=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches" -maxdepth 1 -name '001-*.patch' -type f)
+
+    assert_contains "${patch_file}" "001-add-feature.patch"
+}
+
+test_patch_action_defaults_to_ref_base(){
+    with_temp_repo test_patch_action_defaults_to_ref_base_impl
+}
+
 test_case "patch action generates OpenWrt patch" test_patch_action_generates_openwrt_patch
 test_case "patch action appends after existing patches" test_patch_action_appends_after_existing_patch
-test_case "patch action requires base ref" test_patch_action_requires_base_ref
 test_case "patch action requires source git repo" test_patch_action_requires_source_git_repo
+test_case "patch action defaults base ref to ref-base" test_patch_action_defaults_to_ref_base
 finish_tests

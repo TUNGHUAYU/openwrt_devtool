@@ -12,7 +12,7 @@ function FUNC_create_workspace_pkg_dir(){
         cp -rL "${OPENWRT_PKG_DIR}" "${path}/.."
     else
         # copy folder
-        cp -r "${OPENWRT_PKG_DIR}" "${path}/..}"
+        cp -r "${OPENWRT_PKG_DIR}" "${path}/.."
     fi
 }
 
@@ -78,9 +78,11 @@ function FUNC_create_workspace_src_dir(){
     echo "git clone ${PKG_SOURCE_URL_GIT} ."
     git clone ${PKG_SOURCE_URL_GIT} .
 
-    # Create & Switch branch to dev
-    echo "git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}"
-    git checkout -b dev ${PKG_SOURCE_URL_GIT_BRANCH}
+    # Create base and development branches
+    echo "git checkout -b ref-base ${PKG_SOURCE_URL_GIT_BRANCH}"
+    git checkout -b ref-base ${PKG_SOURCE_URL_GIT_BRANCH}
+    echo "git checkout -b dev ref-base"
+    git checkout -b dev ref-base
 }
 
 function FUNC_symlink_pkg_dir(){
@@ -106,7 +108,7 @@ function FUNC_redirect_src_pkg_url(){
     # insert by openwrt-devtool automatically \\
     PKG_SOURCE_URL:=file://${path}\\
     PKG_SOURCE_PROTO:=git\\
-    PKG_SOURCE_VERSION:=dev\\
+    PKG_SOURCE_VERSION:=ref-base\\
     PKG_NAME:=${PKG_NAME}\\
     PKG_VERSION:=${PKG_SOURCE_URL_GIT_BRANCH}\\
     PKG_RELEASE:=1\\
@@ -114,9 +116,28 @@ function FUNC_redirect_src_pkg_url(){
 
 }
 
+function FUNC_modify_dry_run_plan(){
+
+    local pkg_source_url=$( sed -E -n "s|.?PKG_SOURCE_URL.?=(.*)|\1|p" ${OPENWRT_PKG_DIR}/Makefile )
+    FUNC_parse_url ${pkg_source_url}
+
+    echo "DRY-RUN modify package: ${PKG_NAME}"
+    echo "source package: ${OPENWRT_PKG_DIR}"
+    echo "workspace package: ${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"
+    echo "workspace original backup: ${DEVTOOL_WORKSPACE_ORIPKG_DIR}/${PKG_PATH}"
+    echo "workspace source: ${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
+    echo "clone source repository: ${PKG_SOURCE_URL_GIT}"
+    echo "create ref-base branch at ${PKG_SOURCE_URL_GIT_BRANCH}"
+    echo "checkout dev branch from ref-base"
+    echo "replace OpenWrt package with symlink to workspace package"
+    echo "rewrite Makefile with PKG_SOURCE_URL:=file://${DEVTOOL_WORKSPACE_SRC_DIR}/${PKG_NAME}"
+    echo "rewrite Makefile with PKG_SOURCE_VERSION:=ref-base"
+}
+
 function FUNC_action_modify(){
 
-    PKG_NAME_PATTERN=$1
+    PKG_NAME_PATTERN=${1:-}
+    MODIFY_DRY_RUN=${2:-}
     
     # tui: package selection
     local list="$( find -L ${OPENWRT_DIR}/package/feeds/ -iname makefile | grep "${PKG_NAME_PATTERN}" | sed 's|/Makefile$||' )"
@@ -143,6 +164,11 @@ function FUNC_action_modify(){
     # Check if the package hasn't been developed
     case "${PKG_TYPE}" in
         none )
+            if [[ "${MODIFY_DRY_RUN}" == "--dry-run" ]]; then
+                FUNC_modify_dry_run_plan
+                return
+            fi
+
             # process
             FUNC_create_workspace_pkg_dir
             FUNC_create_worksapce_pkg_ori_dir
