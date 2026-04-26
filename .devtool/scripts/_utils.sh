@@ -6,14 +6,22 @@
 
 
 # devtool print function
-# usage: devtool_print <log_level> <string>
+# usage: devtool_print <log_level> <format> [args...]
 
 devtool_print(){
     local log_leve=$1
-    local string=$2
+    local format=$2
+    local string=""
+
+    shift 2
+    if [[ $# -eq 0 ]]; then
+        string=${format}
+    else
+        printf -v string "${format}" "$@"
+    fi
 
     if [[ ${LOG_LEVEL} -ge ${log_leve} ]]; then
-        [[ "${VERBOSE}" == "1" ]] && printf "%s: %s\n" ${LOG_NAME_LIST[${log_leve}]} "${string}"
+        [[ "${VERBOSE}" == "1" ]] && printf "%s: %s\n" "${LOG_NAME_LIST[${log_leve}]}" "${string}"
         [[ "${VERBOSE}" == "0" ]] && printf "%s\n" "${string}"
     fi
 }
@@ -103,15 +111,14 @@ function FUNC_tui_select(){
     echo ""
 
     local i=1;
-    echo "---"
-    printf "|%-5s|${format}" "No." ${title}
-    echo
+    devtool_print "${LOG_CORE}" "---"
+    devtool_print "${LOG_CORE}" "|%-5s|${format}" "No." ${title}
     for p in ${list[@]}
     do
-        printf "|%-5d|${format}" "${i}" "${p##*/}" "${p/${search_path}/\$\{search_path\}\/}"
+        devtool_print "${LOG_CORE}" "|%-5d|${format}" "${i}" "${p##*/}" "${p/${search_path}/\$\{search_path\}\/}"
         i=$((i+1))
     done
-    echo "---"
+    devtool_print "${LOG_CORE}" "---"
 
     # TUI: Select
     # list is 0-starting

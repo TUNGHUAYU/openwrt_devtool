@@ -40,13 +40,12 @@ function FUNC_patch_list_candidates(){
     local format="|%-03s|%-30s|%-10s|%-50s \n"
     local _format="|%-03d|%-30s|%-10s|%-50s \n"
 
-    printf "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
-    printf "\n"
+    devtool_print "${LOG_CORE}" "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
 
     for p in ${MOD_PKG_LIST}
     do
         count=$(( count + 1 ))
-        printf "${_format}" "${count}" "${p##*/}" "${type}" "${p/${DEVTOOL_DIR}\//}"
+        devtool_print "${LOG_CORE}" "${_format}" "${count}" "${p##*/}" "${type}" "${p/${DEVTOOL_DIR}\//}"
     done
 }
 

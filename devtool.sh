@@ -29,17 +29,26 @@ source ${DEVTOOL_SCRIPT_UTILS_FILE}
 ###
 
 function HELP(){
-    devtool_print ${LOG_CORE} "Usage: ./devtool <command> [<options>]"
-    devtool_print ${LOG_CORE} "version: ${VERSION}"
+    devtool_print ${LOG_CORE} "OpenWrt Devtool"
+    devtool_print ${LOG_CORE} "Version: ${VERSION}"
     devtool_print ${LOG_CORE} ""
-    devtool_print ${LOG_CORE} "Commands: "
-    devtool_print ${LOG_CORE} "---"
-    devtool_print ${LOG_CORE} "new    <pkg-name> [<http-url>] : New devtool package."
-    devtool_print ${LOG_CORE} "modify [<pkg-pattern>] [--dry-run] : Modify openwrt package."
-    devtool_print ${LOG_CORE} "patch  <pkg-pattern> [<base-ref>] : Generate OpenWrt patches from source commits."
-    devtool_print ${LOG_CORE} "abort                          : Abort developing devtool package"
-    devtool_print ${LOG_CORE} "list                           : List developing devtool packages"
-    devtool_print ${LOG_CORE} "---"
+    devtool_print ${LOG_CORE} "Usage: ./devtool.sh <command> [options]"
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Commands:"
+    devtool_print ${LOG_CORE} "  %-34s %s" "new <pkg-name> [<http-url>]" "Create a new devtool package."
+    devtool_print ${LOG_CORE} "  %-34s %s" "modify [<pkg-pattern>] [--dry-run]" "Modify an existing OpenWrt package."
+    devtool_print ${LOG_CORE} "  %-34s %s" "patch <pkg-pattern> [<base-ref>]" "Generate OpenWrt patches from source commits."
+    devtool_print ${LOG_CORE} "  %-34s %s" "abort" "Abort a selected devtool package."
+    devtool_print ${LOG_CORE} "  %-34s %s" "list" "List packages tracked in the workspace."
+    devtool_print ${LOG_CORE} "  %-34s %s" "help" "Show this help message."
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Examples:"
+    devtool_print ${LOG_CORE} "  ./devtool.sh list"
+    devtool_print ${LOG_CORE} "  ./devtool.sh modify libcap-ng --dry-run"
+    devtool_print ${LOG_CORE} "  ./devtool.sh patch libcap-ng ref-base"
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Notes:"
+    devtool_print ${LOG_CORE} "  Builds run through the configured OpenWrt tree."
 }
 
 ###

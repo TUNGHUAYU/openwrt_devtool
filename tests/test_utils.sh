@@ -29,6 +29,36 @@ test_devtool_print_verbose_prefixes_level(){
     assert_eq "INFO: verbose message" "${output}"
 }
 
+test_devtool_print_supports_format_arguments(){
+    LOG_LEVEL=${LOG_CORE}
+    VERBOSE=0
+
+    local output
+    output=$(devtool_print "${LOG_CORE}" "|%-5s|%-10s|" "No." "PKG")
+
+    assert_eq "|No.  |PKG       |" "${output}"
+}
+
+test_devtool_print_keeps_plain_percent_literal(){
+    LOG_LEVEL=${LOG_CORE}
+    VERBOSE=0
+
+    local output
+    output=$(devtool_print "${LOG_CORE}" "progress 100%")
+
+    assert_eq "progress 100%" "${output}"
+}
+
+test_devtool_print_verbose_prefixes_formatted_message(){
+    LOG_LEVEL=${LOG_INFO}
+    VERBOSE=1
+
+    local output
+    output=$(devtool_print "${LOG_INFO}" "%s=%s" "PKG" "demo")
+
+    assert_eq "INFO: PKG=demo" "${output}"
+}
+
 test_write_env_value_updates_file_impl(){
     local tmpdir=$1
     local conf_file="${tmpdir}/sample.conf"
@@ -98,6 +128,9 @@ test_check_git_conf_missing_identity_sets_error(){
 
 test_case "devtool_print respects log level" test_devtool_print_respects_log_level
 test_case "devtool_print prefixes verbose messages" test_devtool_print_verbose_prefixes_level
+test_case "devtool_print supports format arguments" test_devtool_print_supports_format_arguments
+test_case "devtool_print keeps plain percent literal" test_devtool_print_keeps_plain_percent_literal
+test_case "devtool_print prefixes formatted verbose messages" test_devtool_print_verbose_prefixes_formatted_message
 test_case "FUNC_write_env_value updates config files" test_write_env_value_updates_file
 test_case "FUNC_write_env_value reports missing files" test_write_env_value_missing_file_sets_error
 test_case "FUNC_check_git_conf accepts configured identity" test_check_git_conf_reads_temp_home

@@ -5,6 +5,7 @@ set -u
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source "${ROOT_DIR}/tests/lib/assertions.sh"
 source "${ROOT_DIR}/.devtool/configs/core.conf"
+source "${ROOT_DIR}/.devtool/scripts/_utils.sh"
 source "${ROOT_DIR}/.devtool/scripts/action_list.sh"
 
 test_action_list_prints_new_and_modified_packages(){
