@@ -107,7 +107,115 @@ test_modify_dry_run_prints_plan_without_mutating(){
     with_temp_repo test_modify_dry_run_prints_plan_without_mutating_impl
 }
 
+test_parse_url_detects_tarball_source_impl(){
+    local tmpdir=$1
+    local openwrt_pkg="${tmpdir}/openwrt/package/feeds/packages/libcap-ng"
+    mkdir -p "${openwrt_pkg}"
+    cat > "${openwrt_pkg}/Makefile" <<'EOF'
+PKG_NAME:=libcap-ng
+PKG_VERSION:=0.8.4
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://people.redhat.com/sgrubb/libcap-ng
+EOF
+
+    OPENWRT_PKG_DIR="${openwrt_pkg}"
+
+    FUNC_parse_url "https://people.redhat.com/sgrubb/libcap-ng"
+
+    assert_eq "tarball" "${PKG_SOURCE_URL_TYPE}" &&
+    assert_eq "https://people.redhat.com/sgrubb/libcap-ng" "${PKG_SOURCE_URL_TARBALL}" &&
+    assert_eq "0.8.4" "${PKG_SOURCE_URL_GIT_BRANCH}"
+}
+
+test_parse_url_detects_tarball_source(){
+    with_temp_repo test_parse_url_detects_tarball_source_impl
+}
+
+test_create_workspace_src_dir_from_tarball_prepare_impl(){
+    local tmpdir=$1
+    local openwrt_pkg="${tmpdir}/openwrt/package/feeds/packages/libcap-ng"
+    local src_dir="${tmpdir}/workspace/SOURCES/libcap-ng"
+    local fake_bin="${tmpdir}/bin"
+    mkdir -p "${openwrt_pkg}" "${fake_bin}"
+    cat > "${openwrt_pkg}/Makefile" <<'EOF'
+PKG_NAME:=libcap-ng
+PKG_VERSION:=0.8.4
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://people.redhat.com/sgrubb/libcap-ng
+EOF
+    cat > "${fake_bin}/make" <<'EOF'
+#!/bin/bash
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "-C" ]]; then
+        openwrt_dir=$2
+        shift 2
+        continue
+    fi
+    shift
+done
+mkdir -p "${openwrt_dir}/build_dir/target-test/libcap-ng-0.8.4"
+printf "prepared\n" > "${openwrt_dir}/build_dir/target-test/libcap-ng-0.8.4/source.txt"
+EOF
+    chmod +x "${fake_bin}/make"
+
+    OPENWRT_DIR="${tmpdir}/openwrt"
+    OPENWRT_PKG_DIR="${openwrt_pkg}"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    PKG_NAME="libcap-ng"
+    PKG_PATH="feeds/packages/libcap-ng"
+    PATH="${fake_bin}:${PATH}" FUNC_create_workspace_src_dir >/dev/null 2>&1
+
+    local current_branch
+    current_branch=$(git -C "${src_dir}" branch --show-current)
+
+    assert_eq "dev" "${current_branch}" &&
+    git -C "${src_dir}" rev-parse ref-base >/dev/null &&
+    git -C "${src_dir}" rev-parse dev >/dev/null &&
+    assert_contains "$(cat "${src_dir}/source.txt")" "prepared"
+}
+
+test_create_workspace_src_dir_from_tarball_prepare(){
+    with_temp_repo test_create_workspace_src_dir_from_tarball_prepare_impl
+}
+
+test_modify_stops_before_mutation_when_source_setup_fails_impl(){
+    local tmpdir=$1
+    local pkg_dir="${tmpdir}/openwrt/package/feeds/packages/failpkg"
+    mkdir -p "${pkg_dir}"
+    cat > "${pkg_dir}/Makefile" <<'EOF'
+PKG_NAME:=failpkg
+PKG_VERSION:=1.0
+PKG_SOURCE:=failpkg-1.0.tar.gz
+PKG_SOURCE_URL:=https://example.test/failpkg
+EOF
+
+    OPENWRT_PKG_DIR="${pkg_dir}"
+    OPENWRT_DIR="${tmpdir}/openwrt"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
+    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/PACKAGES_ORIGIN"
+    PKG_NAME="failpkg"
+    PKG_PATH="feeds/packages/failpkg"
+    DEVTOOL_PKG_DIR="${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"
+
+    FUNC_create_workspace_src_dir >/dev/null 2>&1
+    local status=$?
+
+    assert_status "${ERROR_FILE_NO_EXIST}" "${status}" &&
+    [[ ! -L "${pkg_dir}" ]] &&
+    [[ ! -e "${DEVTOOL_PKG_DIR}" ]] &&
+    [[ ! -e "${DEVTOOL_WORKSPACE_ORIPKG_DIR}/${PKG_PATH}" ]] &&
+    assert_contains "$(cat "${pkg_dir}/Makefile")" "PKG_SOURCE_URL:=https://example.test/failpkg"
+}
+
+test_modify_stops_before_mutation_when_source_setup_fails(){
+    with_temp_repo test_modify_stops_before_mutation_when_source_setup_fails_impl
+}
+
 test_case "modify source setup creates ref-base and dev branches" test_create_workspace_src_dir_creates_ref_base_and_dev
 test_case "modify Makefile redirect uses ref-base" test_redirect_src_pkg_url_uses_ref_base
 test_case "modify dry-run prints plan without mutating" test_modify_dry_run_prints_plan_without_mutating
+test_case "modify parser detects tarball source" test_parse_url_detects_tarball_source
+test_case "modify tarball source setup creates ref-base and dev branches" test_create_workspace_src_dir_from_tarball_prepare
+test_case "modify source setup failure leaves package unmodified" test_modify_stops_before_mutation_when_source_setup_fails
 finish_tests
