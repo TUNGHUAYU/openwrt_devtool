@@ -59,6 +59,7 @@ function HELP_MAIN(){
     devtool_print ${LOG_CORE} "  %-10s %s" "new" "Create a new devtool package."
     devtool_print ${LOG_CORE} "  %-10s %s" "modify" "Modify an existing OpenWrt package."
     devtool_print ${LOG_CORE} "  %-10s %s" "patch" "Generate OpenWrt patches from source commits."
+    devtool_print ${LOG_CORE} "  %-10s %s" "finish" "Finalize package work into finished output or OpenWrt patches."
     devtool_print ${LOG_CORE} "  %-10s %s" "abort" "Abort a selected devtool package."
     devtool_print ${LOG_CORE} "  %-10s %s" "help" "Show this help message."
     devtool_print ${LOG_CORE} ""
@@ -135,6 +136,24 @@ function HELP_ABORT(){
     HELP_END
 }
 
+function HELP_FINISH(){
+    HELP_BEGIN
+    HELP_PRINT_GREEN "Usage: ./devtool.sh finish [<pkg-pattern>] [--dry-run]"
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Arguments:"
+    devtool_print ${LOG_CORE} "  %-16s %s" "[<pkg-pattern>]" "Optional devtool package name or path pattern used to filter package selection."
+    devtool_print ${LOG_CORE} "  %-16s %s" "[--dry-run]" "Show finished output and cleanup steps without changing package state."
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Notes:"
+    devtool_print ${LOG_CORE} "  New packages move Makefile and source into workspace/finished/."
+    devtool_print ${LOG_CORE} "  Modified packages move generated patches into the OpenWrt package patches directory."
+    devtool_print ${LOG_CORE} ""
+    devtool_print ${LOG_CORE} "Examples:"
+    HELP_PRINT_GREEN "  ./devtool.sh finish"
+    HELP_PRINT_GREEN "  ./devtool.sh finish libcap-ng --dry-run"
+    HELP_END
+}
+
 function HELP_HELP(){
     HELP_BEGIN
     HELP_PRINT_GREEN "Usage: ./devtool.sh help"
@@ -204,6 +223,19 @@ case "${COMMAND}" in
         PKG_NAME_PATTERN=${2:-}
         BASE_REF=${3:-}
         FUNC_action_patch "${PKG_NAME_PATTERN}" "${BASE_REF}"
+        ;;
+    finish)
+        [[ "$2" == "help" ]] && HELP_FINISH && exit ${RESULT_OK}
+        source ${DEVTOOL_SCRIPT_ACTION_PATCH}
+        source ${DEVTOOL_SCRIPT_ACTION_FINISH}
+        if [[ "$2" == "--dry-run" ]]; then
+            PKG_NAME_PATTERN=""
+            FINISH_DRY_RUN="--dry-run"
+        else
+            PKG_NAME_PATTERN=${2:-}
+            FINISH_DRY_RUN=${3:-}
+        fi
+        FUNC_action_finish "${PKG_NAME_PATTERN}" "${FINISH_DRY_RUN}"
         ;;
     abort)
         [[ "$2" == "help" ]] && HELP_ABORT && exit ${RESULT_OK}

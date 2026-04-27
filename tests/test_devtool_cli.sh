@@ -43,6 +43,7 @@ test_help_prints_pretty_sections(){
     assert_contains "${output}" "new" &&
     assert_contains "${output}" "modify" &&
     assert_contains "${output}" "patch" &&
+    assert_contains "${output}" "finish" &&
     assert_contains "${output}" "abort" &&
     assert_contains "${output}" "list" &&
     assert_contains "${output}" "help" &&
@@ -107,6 +108,24 @@ test_patch_help_prints_argument_details(){
     return "${status}"
 }
 
+test_finish_help_prints_argument_details(){
+    local output
+    local output_file
+    output_file=$(mktemp)
+    (cd "${ROOT_DIR}" && bash devtool.sh finish help >"${output_file}" 2>&1)
+    output=$(<"${output_file}")
+
+    assert_help_framed "${output_file}" &&
+    assert_contains "${output}" "Usage: ./devtool.sh finish [<pkg-pattern>] [--dry-run]" &&
+    assert_contains "${output}" "${GREEN}Usage: ./devtool.sh finish [<pkg-pattern>] [--dry-run]${NC}" &&
+    assert_contains "${output}" "[<pkg-pattern>]" &&
+    assert_contains "${output}" "[--dry-run]" &&
+    assert_contains "${output}" "./devtool.sh finish libcap-ng --dry-run"
+    local status=$?
+    rm -f "${output_file}"
+    return "${status}"
+}
+
 test_list_help_prints_command_details(){
     local output
     output=$(cd "${ROOT_DIR}" && bash devtool.sh list help 2>&1)
@@ -156,6 +175,7 @@ test_case "bash devtool.sh help prints pretty sections" test_help_prints_pretty_
 test_case "bash devtool.sh new help prints argument details" test_new_help_prints_argument_details
 test_case "bash devtool.sh modify help prints argument details" test_modify_help_prints_argument_details
 test_case "bash devtool.sh patch help prints argument details" test_patch_help_prints_argument_details
+test_case "bash devtool.sh finish help prints argument details" test_finish_help_prints_argument_details
 test_case "bash devtool.sh list help prints command details" test_list_help_prints_command_details
 test_case "bash devtool.sh abort help prints command details" test_abort_help_prints_command_details
 test_case "bash devtool.sh new without package prints new help" test_new_without_package_prints_new_help

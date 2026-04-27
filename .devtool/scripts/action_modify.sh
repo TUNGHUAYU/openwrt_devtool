@@ -435,6 +435,7 @@ function FUNC_action_modify(){
             FUNC_create_worksapce_pkg_ori_dir
             FUNC_symlink_pkg_dir
             FUNC_redirect_src_pkg_url    
+            FUNC_write_pkg_metadata "${DEVTOOL_PKG_DIR}" "modify" "${PKG_PATH}" "openwrt:${OPENWRT_PKG_DIR}"
             ;;
             
         * )

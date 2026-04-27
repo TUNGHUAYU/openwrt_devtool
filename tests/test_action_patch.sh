@@ -10,8 +10,8 @@ source "${ROOT_DIR}/.devtool/scripts/action_patch.sh"
 
 create_patch_fixture(){
     local tmpdir=$1
-    local pkg_dir="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
-    local src_dir="${tmpdir}/workspace/SOURCES/demo_pkg"
+    local pkg_dir="${tmpdir}/workspace/developing/PACKAGES/feeds/feed_prplos/demo_pkg"
+    local src_dir="${tmpdir}/workspace/developing/SOURCES/demo_pkg"
 
     mkdir -p "${pkg_dir}" "${src_dir}"
     printf "PKG_SOURCE_VERSION:=ref-base\n" > "${pkg_dir}/Makefile"
@@ -29,8 +29,8 @@ create_patch_fixture(){
     git -C "${src_dir}" add feature.txt
     git -C "${src_dir}" commit -m "add feature" >/dev/null
 
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     MOD_PKG_LIST="${pkg_dir}"
     PKG_PATTERN="demo_pkg"
 }
@@ -99,11 +99,11 @@ test_patch_action_rerun_does_not_duplicate_patch(){
 
 test_patch_action_requires_source_git_repo_impl(){
     local tmpdir=$1
-    local pkg_dir="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
+    local pkg_dir="${tmpdir}/workspace/developing/PACKAGES/feeds/feed_prplos/demo_pkg"
     mkdir -p "${pkg_dir}"
     touch "${pkg_dir}/Makefile"
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     MOD_PKG_LIST="${pkg_dir}"
 
     printf "1\n" | FUNC_action_patch "demo_pkg" "HEAD" >/dev/null
@@ -255,7 +255,7 @@ test_patch_action_zero_match_pattern_shows_all_modified(){
 }
 
 test_patch_action_no_modified_packages_errors(){
-    DEVTOOL_WORKSPACE_PKG_DIR="/repo/workspace/PACKAGES"
+    DEVTOOL_WORKSPACE_PKG_DIR="/repo/workspace/developing/PACKAGES"
     MOD_PKG_LIST=""
 
     FUNC_action_patch "does-not-match" >/dev/null
@@ -266,9 +266,9 @@ test_patch_action_no_modified_packages_errors(){
 
 test_patch_action_menu_displays_modified_candidates(){
     DEVTOOL_DIR="/repo"
-    DEVTOOL_WORKSPACE_PKG_DIR="/repo/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="/repo/workspace/SOURCES"
-    MOD_PKG_LIST="/repo/workspace/PACKAGES/feeds/feed_prplos/pkg_one /repo/workspace/PACKAGES/feeds/feed_lcm/pkg_two"
+    DEVTOOL_WORKSPACE_PKG_DIR="/repo/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="/repo/workspace/developing/SOURCES"
+    MOD_PKG_LIST="/repo/workspace/developing/PACKAGES/feeds/feed_prplos/pkg_one /repo/workspace/developing/PACKAGES/feeds/feed_lcm/pkg_two"
 
     local output
     output=$(printf "2\n" | FUNC_action_patch "" 2>&1 || true)

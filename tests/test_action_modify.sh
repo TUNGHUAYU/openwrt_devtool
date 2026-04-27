@@ -24,7 +24,7 @@ create_remote_repo(){
 test_create_workspace_src_dir_from_vcs_download_impl(){
     local tmpdir=$1
     local openwrt_pkg="${tmpdir}/openwrt/package/feeds/feed_prplos/demo_pkg"
-    local src_dir="${tmpdir}/workspace/SOURCES/demo_pkg"
+    local src_dir="${tmpdir}/workspace/developing/SOURCES/demo_pkg"
     local fixture_archive="${tmpdir}/demo_pkg-1.0.tar.gz"
     mkdir -p "${openwrt_pkg}" "${tmpdir}/openwrt"
     create_test_tarball "${tmpdir}" "${fixture_archive}" "demo_pkg-1.0"
@@ -47,7 +47,7 @@ EOF
     OPENWRT_PKG_DIR="${openwrt_pkg}"
     OPENWRT_DIR="${tmpdir}/openwrt"
     DEVTOOL_DIR="${tmpdir}/devtool"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="demo_pkg"
     PKG_PATH="feeds/feed_prplos/demo_pkg"
 
@@ -69,7 +69,7 @@ test_create_workspace_src_dir_from_vcs_download(){
 
 test_redirect_src_pkg_url_uses_ref_base_impl(){
     local tmpdir=$1
-    local pkg_dir="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
+    local pkg_dir="${tmpdir}/workspace/developing/PACKAGES/feeds/feed_prplos/demo_pkg"
     mkdir -p "${pkg_dir}"
     cat > "${pkg_dir}/Makefile" <<'EOF'
 PKG_NAME:=demo_pkg
@@ -85,8 +85,8 @@ PKG_BUILD_FLAGS:=lto
 PKG_LICENSE:=MIT
 EOF
 
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_PATH="feeds/feed_prplos/demo_pkg"
     PKG_NAME="demo_pkg"
     PKG_SOURCE_URL_GIT_BRANCH="v1.0"
@@ -121,9 +121,9 @@ test_modify_dry_run_prints_plan_without_mutating_impl(){
 
     OPENWRT_PKG_DIR="${pkg_dir}"
     OPENWRT_DIR="${tmpdir}/openwrt"
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/PACKAGES_ORIGIN"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/developing/PACKAGES_ORIGIN"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="demo_pkg"
     PKG_PATH="feeds/feed_prplos/demo_pkg"
     DEVTOOL_PKG_DIR="${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"
@@ -207,7 +207,7 @@ EOF
 test_create_workspace_src_dir_from_tarball_download_impl(){
     local tmpdir=$1
     local openwrt_pkg="${tmpdir}/openwrt/package/feeds/packages/libcap-ng"
-    local src_dir="${tmpdir}/workspace/SOURCES/libcap-ng"
+    local src_dir="${tmpdir}/workspace/developing/SOURCES/libcap-ng"
     local fixture_archive="${tmpdir}/libcap-ng-0.8.4.tar.gz"
     mkdir -p "${openwrt_pkg}"
     create_test_tarball "${tmpdir}" "${fixture_archive}"
@@ -223,7 +223,7 @@ EOF
     OPENWRT_DIR="${tmpdir}/openwrt"
     DEVTOOL_DIR="${tmpdir}/devtool"
     OPENWRT_PKG_DIR="${openwrt_pkg}"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="libcap-ng"
     PKG_PATH="feeds/packages/libcap-ng"
     FUNC_create_workspace_src_dir >/dev/null 2>&1
@@ -249,7 +249,7 @@ test_create_workspace_src_dir_from_tarball_download(){
 test_tarball_source_url_file_overrides_download_name_impl(){
     local tmpdir=$1
     local openwrt_pkg="${tmpdir}/openwrt/package/feeds/packages/libcap-ng"
-    local src_dir="${tmpdir}/workspace/SOURCES/libcap-ng"
+    local src_dir="${tmpdir}/workspace/developing/SOURCES/libcap-ng"
     local fixture_archive="${tmpdir}/libcap-ng-release.tar.gz"
     mkdir -p "${openwrt_pkg}"
     create_test_tarball "${tmpdir}" "${fixture_archive}"
@@ -266,7 +266,7 @@ EOF
     OPENWRT_DIR="${tmpdir}/openwrt"
     DEVTOOL_DIR="${tmpdir}/devtool"
     OPENWRT_PKG_DIR="${openwrt_pkg}"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="libcap-ng"
     PKG_PATH="feeds/packages/libcap-ng"
     FUNC_create_workspace_src_dir >/dev/null 2>&1
@@ -292,9 +292,9 @@ EOF
 
     OPENWRT_PKG_DIR="${pkg_dir}"
     OPENWRT_DIR="${tmpdir}/openwrt"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/PACKAGES_ORIGIN"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/developing/PACKAGES_ORIGIN"
     PKG_NAME="failpkg"
     PKG_PATH="feeds/packages/failpkg"
     DEVTOOL_PKG_DIR="${DEVTOOL_WORKSPACE_PKG_DIR}/${PKG_PATH}"

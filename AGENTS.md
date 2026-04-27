@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`devtool.sh` is the main Bash entrypoint for the OpenWrt devtool workflow. Configuration lives in `.devtool/configs/`, shared helpers in `.devtool/scripts/_*.sh`, and command implementations in `.devtool/scripts/action_*.sh`. OpenWrt package templates are stored in `.devtool/ref-Makefile/`; starter source trees are stored in `.devtool/ref-sources/`. `workspace/` contains generated package/feed/source work and is ignored by Git.
+`devtool.sh` is the main Bash entrypoint for the OpenWrt devtool workflow. Configuration lives in `.devtool/configs/`, shared helpers in `.devtool/scripts/_*.sh`, and command implementations in `.devtool/scripts/action_*.sh`. OpenWrt package templates are stored in `.devtool/ref-Makefile/`; starter source trees are stored in `.devtool/ref-sources/`. Active work lives under `workspace/developing/` (`FEEDS/`, `PACKAGES/`, `PACKAGES_ORIGIN/`, `SOURCES/`); finalized local outputs live under `workspace/finished/`.
 
 ## Build, Test, and Development Commands
 
@@ -11,6 +11,7 @@
 - `bash devtool.sh new <pkg-name> [<git-url>]` creates a package from local templates or a Git repository URL.
 - `bash devtool.sh modify [<pkg-pattern>] [--dry-run]` copies an existing package, creates `ref-base` and `dev`, and leaves `HEAD` on `dev`.
 - `bash devtool.sh patch [<pkg-pattern>] [<base-ref>]` appends source patches from modified package commits to `patches/`; without a pattern, select from modified packages. Omitted base defaults to `ref-base`.
+- `bash devtool.sh finish [<pkg-pattern>] [--dry-run]` moves new package `Makefile`s and sources into `workspace/finished/` or restores modified packages and moves patches into OpenWrt.
 - `bash devtool.sh abort` removes selected generated work after confirmation.
 - `bash tests/run_tests.sh` runs the Bash test suite.
 - `bash -n devtool.sh .devtool/scripts/*.sh` performs a Bash syntax check.

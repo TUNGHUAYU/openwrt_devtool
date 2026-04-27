@@ -43,7 +43,7 @@ function FUNC_get_new_pkg_list(){
     local new_pkg_workdir="${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/"
 
     if [[ -d ${new_pkg_workdir} ]]; then
-        new_pkg_list=$(find ${new_pkg_workdir} -mindepth 1 -type d)
+        new_pkg_list=$(find "${new_pkg_workdir}" -mindepth 2 -maxdepth 2 -iname Makefile -type f | sed 's|/Makefile$||')
     fi
 
     # export to global variable 
@@ -93,5 +93,32 @@ function FUNC_check_pkg_type(){
     if [[ -n "${url}" ]]; then
         PKG_TYPE="remote-git"
         return
+    fi
+}
+
+function FUNC_write_pkg_metadata(){
+    local path=$1
+    local kind=$2
+    local pkg_path=${3:-}
+    local source_origin=${4:-}
+    local meta_dir="${path}/.devtool"
+
+    mkdir -p "${meta_dir}"
+    cat > "${meta_dir}/meta.conf" <<EOF
+DEVTOOL_PACKAGE_KIND=${kind}
+PKG_NAME=${PKG_NAME}
+PKG_PATH=${pkg_path}
+SOURCE_ORIGIN=${source_origin}
+EOF
+}
+
+function FUNC_read_pkg_metadata(){
+    local path=$1
+    local meta_file="${path}/.devtool/meta.conf"
+
+    DEVTOOL_PACKAGE_KIND=""
+    SOURCE_ORIGIN=""
+    if [[ -f "${meta_file}" ]]; then
+        source "${meta_file}"
     fi
 }

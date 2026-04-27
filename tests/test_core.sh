@@ -40,11 +40,32 @@ test_missing_openwrt_dir_sets_false(){
     assert_eq "${RESULT_FALSE}" "${RESULT}"
 }
 
+test_path_config_uses_developing_and_finished_layout(){
+    local old_devtool_dir=${DEVTOOL_DIR:-}
+    local old_openwrt_dir=${OPENWRT_DIR:-}
+
+    DEVTOOL_DIR="/repo"
+    source "${ROOT_DIR}/.devtool/configs/path.conf"
+
+    local status=0
+    assert_eq "/repo/workspace/developing/FEEDS" "${DEVTOOL_WORKSPACE_FEED_DIR}" || status=$?
+    assert_eq "/repo/workspace/developing/SOURCES" "${DEVTOOL_WORKSPACE_SRC_DIR}" || status=$?
+    assert_eq "/repo/workspace/developing/PACKAGES" "${DEVTOOL_WORKSPACE_PKG_DIR}" || status=$?
+    assert_eq "/repo/workspace/developing/PACKAGES_ORIGIN" "${DEVTOOL_WORKSPACE_ORIPKG_DIR}" || status=$?
+    assert_eq "/repo/workspace/finished/FEEDS" "${DEVTOOL_FINISHED_FEED_DIR}" || status=$?
+    assert_eq "/repo/workspace/finished/SOURCES" "${DEVTOOL_FINISHED_SRC_DIR}" || status=$?
+
+    DEVTOOL_DIR=${old_devtool_dir}
+    OPENWRT_DIR=${old_openwrt_dir}
+    return ${status}
+}
+
 test_get_new_pkg_list_reads_feed_workspace_impl(){
     local tmpdir=$1
-    DEVTOOL_WORKSPACE_FEED_DIR="${tmpdir}/workspace/FEEDS"
+    DEVTOOL_WORKSPACE_FEED_DIR="${tmpdir}/workspace/developing/FEEDS"
     FEED_NAME="feed_devtool"
     mkdir -p "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg"
+    touch "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg/Makefile"
 
     FUNC_get_new_pkg_list
 
@@ -55,9 +76,41 @@ test_get_new_pkg_list_reads_feed_workspace(){
     with_temp_repo test_get_new_pkg_list_reads_feed_workspace_impl
 }
 
+test_get_new_pkg_list_ignores_metadata_dirs_impl(){
+    local tmpdir=$1
+    DEVTOOL_WORKSPACE_FEED_DIR="${tmpdir}/workspace/developing/FEEDS"
+    FEED_NAME="feed_devtool"
+    mkdir -p "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg/.devtool"
+    touch "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg/Makefile"
+
+    FUNC_get_new_pkg_list
+
+    assert_eq "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg" "${NEW_PKG_LIST}" &&
+    [[ "${NEW_PKG_LIST}" != *".devtool"* ]]
+}
+
+test_get_new_pkg_list_ignores_metadata_dirs(){
+    with_temp_repo test_get_new_pkg_list_ignores_metadata_dirs_impl
+}
+
+test_get_new_pkg_list_ignores_finished_metadata_only_package_impl(){
+    local tmpdir=$1
+    DEVTOOL_WORKSPACE_FEED_DIR="${tmpdir}/workspace/developing/FEEDS"
+    FEED_NAME="feed_devtool"
+    mkdir -p "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg/.devtool"
+
+    FUNC_get_new_pkg_list
+
+    assert_eq "" "${NEW_PKG_LIST}"
+}
+
+test_get_new_pkg_list_ignores_finished_metadata_only_package(){
+    with_temp_repo test_get_new_pkg_list_ignores_finished_metadata_only_package_impl
+}
+
 test_get_mod_pkg_list_reads_package_makefiles_impl(){
     local tmpdir=$1
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
     mkdir -p "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/base/existing_pkg"
     touch "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/base/existing_pkg/Makefile"
 
@@ -73,7 +126,7 @@ test_get_mod_pkg_list_reads_package_makefiles(){
 test_check_pkg_type_detects_new_package(){
     PKG_NAME="demo_pkg"
     URL=""
-    NEW_PKG_LIST="/repo/workspace/FEEDS/feed_devtool/demo_pkg"
+    NEW_PKG_LIST="/repo/workspace/developing/FEEDS/feed_devtool/demo_pkg"
     MOD_PKG_LIST=""
 
     FUNC_check_pkg_type >/dev/null
@@ -85,7 +138,7 @@ test_check_pkg_type_detects_modified_package(){
     PKG_NAME="existing_pkg"
     URL=""
     NEW_PKG_LIST=""
-    MOD_PKG_LIST="/repo/workspace/PACKAGES/feeds/base/existing_pkg"
+    MOD_PKG_LIST="/repo/workspace/developing/PACKAGES/feeds/base/existing_pkg"
 
     FUNC_check_pkg_type >/dev/null
 
@@ -128,7 +181,10 @@ test_check_pkg_type_defaults_to_none(){
 test_case "empty OPENWRT_DIR sets RESULT_FALSE" test_empty_openwrt_dir_sets_false
 test_case "existing OPENWRT_DIR sets RESULT_TRUE" test_existing_openwrt_dir_sets_true
 test_case "missing OPENWRT_DIR sets RESULT_FALSE" test_missing_openwrt_dir_sets_false
+test_case "path config uses developing and finished workspace layout" test_path_config_uses_developing_and_finished_layout
 test_case "new packages are discovered from feed workspace" test_get_new_pkg_list_reads_feed_workspace
+test_case "new package discovery ignores metadata directories" test_get_new_pkg_list_ignores_metadata_dirs
+test_case "new package discovery ignores metadata-only finished packages" test_get_new_pkg_list_ignores_finished_metadata_only_package
 test_case "modified packages are discovered from package makefiles" test_get_mod_pkg_list_reads_package_makefiles
 test_case "package type detects new package" test_check_pkg_type_detects_new_package
 test_case "package type detects modified package" test_check_pkg_type_detects_modified_package

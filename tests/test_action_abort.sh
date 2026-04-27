@@ -12,9 +12,9 @@ test_abort_mod_removes_origin_symlink_impl(){
     local tmpdir=$1
     local openwrt_pkg="${tmpdir}/openwrt/package/feeds/feed_prplos/demo_pkg"
     local original_target="${tmpdir}/openwrt/package/feeds/feed_prplos/demo_pkg.origin"
-    local origin_link="${tmpdir}/workspace/PACKAGES_ORIGIN/feeds/feed_prplos/demo_pkg"
-    local workspace_pkg="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
-    local workspace_src="${tmpdir}/workspace/SOURCES/demo_pkg"
+    local origin_link="${tmpdir}/workspace/developing/PACKAGES_ORIGIN/feeds/feed_prplos/demo_pkg"
+    local workspace_pkg="${tmpdir}/workspace/developing/PACKAGES/feeds/feed_prplos/demo_pkg"
+    local workspace_src="${tmpdir}/workspace/developing/SOURCES/demo_pkg"
 
     mkdir -p "${original_target}" "${workspace_pkg}" "${workspace_src}" "${tmpdir}/openwrt/tmp/info"
     mkdir -p "$(dirname "${openwrt_pkg}")" "$(dirname "${origin_link}")"
@@ -23,9 +23,9 @@ test_abort_mod_removes_origin_symlink_impl(){
     ln -s "${workspace_pkg}" "${openwrt_pkg}"
 
     OPENWRT_DIR="${tmpdir}/openwrt"
-    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/PACKAGES_ORIGIN"
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/developing/PACKAGES_ORIGIN"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="demo_pkg"
 
     FUNC_abort_mod_pkg_work >/dev/null
@@ -44,9 +44,9 @@ test_abort_mod_removes_broken_origin_symlink_impl(){
     local tmpdir=$1
     local openwrt_pkg="${tmpdir}/openwrt/package/feeds/feed_prplos/demo_pkg"
     local missing_target="${tmpdir}/openwrt/package/feeds/feed_prplos/missing-origin"
-    local origin_link="${tmpdir}/workspace/PACKAGES_ORIGIN/feeds/feed_prplos/demo_pkg"
-    local workspace_pkg="${tmpdir}/workspace/PACKAGES/feeds/feed_prplos/demo_pkg"
-    local workspace_src="${tmpdir}/workspace/SOURCES/demo_pkg"
+    local origin_link="${tmpdir}/workspace/developing/PACKAGES_ORIGIN/feeds/feed_prplos/demo_pkg"
+    local workspace_pkg="${tmpdir}/workspace/developing/PACKAGES/feeds/feed_prplos/demo_pkg"
+    local workspace_src="${tmpdir}/workspace/developing/SOURCES/demo_pkg"
 
     mkdir -p "${workspace_pkg}" "${workspace_src}" "${tmpdir}/openwrt/tmp/info"
     mkdir -p "$(dirname "${openwrt_pkg}")" "$(dirname "${origin_link}")"
@@ -55,9 +55,9 @@ test_abort_mod_removes_broken_origin_symlink_impl(){
     ln -s "${workspace_pkg}" "${openwrt_pkg}"
 
     OPENWRT_DIR="${tmpdir}/openwrt"
-    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/PACKAGES_ORIGIN"
-    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/PACKAGES"
-    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
+    DEVTOOL_WORKSPACE_ORIPKG_DIR="${tmpdir}/workspace/developing/PACKAGES_ORIGIN"
+    DEVTOOL_WORKSPACE_PKG_DIR="${tmpdir}/workspace/developing/PACKAGES"
+    DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/developing/SOURCES"
     PKG_NAME="demo_pkg"
 
     FUNC_abort_mod_pkg_work >/dev/null
