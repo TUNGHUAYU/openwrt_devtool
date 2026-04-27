@@ -203,6 +203,29 @@ test_tui_select_plain_items(){
     return "${status}"
 }
 
+test_tui_select_plain_items_use_compact_row_spacing(){
+    local output=""
+    local output_file=""
+    output_file=$(mktemp)
+    LOG_LEVEL=${LOG_CORE}
+    VERBOSE=0
+
+    FUNC_tui_select \
+        "alpha beta" \
+        --item-mode plain \
+        --message "Select item:" \
+        --title "FEATURE" >"${output_file}" 2>&1 <<< "2"
+    output=$(cat "${output_file}")
+
+    [[ "${output}" == $'\n---\n|No.'* ]] &&
+    [[ "${output}" == *$'FEATURE                                           \n\n|1   '* ]] &&
+    [[ "${output}" == *$'alpha                                             \n|2   '* ]] &&
+    [[ "${output}" != *$'alpha                                             \n\n|2   '* ]]
+    local status=$?
+    rm -f "${output_file}"
+    return "${status}"
+}
+
 test_tui_select_empty_list_returns_error(){
     LOG_LEVEL=${LOG_CORE}
     VERBOSE=0
@@ -296,6 +319,7 @@ test_case "FUNC_check_git_conf rejects missing identity" test_check_git_conf_mis
 test_case "FUNC_tui_select supports named title override" test_tui_select_named_title_override
 test_case "FUNC_tui_select keeps default path title" test_tui_select_default_title_for_path_items
 test_case "FUNC_tui_select supports plain menu items" test_tui_select_plain_items
+test_case "FUNC_tui_select uses compact row spacing" test_tui_select_plain_items_use_compact_row_spacing
 test_case "FUNC_tui_select reports empty lists" test_tui_select_empty_list_returns_error
 test_case "FUNC_tui_select reports invalid selections" test_tui_select_invalid_selection_returns_error
 test_case "FUNC_tui_select preserves legacy positional arguments" test_tui_select_legacy_positional_arguments

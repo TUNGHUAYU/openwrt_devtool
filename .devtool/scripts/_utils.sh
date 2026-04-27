@@ -98,7 +98,7 @@ function FUNC_tui_select(){
     local list=(${raw_list})
     local search_path=""
     local message="Please select:"
-    local format='%-30s|%-50s \n'
+    local format='%-30s|%-50s'
     local title="PKG-NAME PKG-PATH"
     local title_columns=()
     local item_mode="path"
@@ -155,7 +155,7 @@ function FUNC_tui_select(){
     fi
 
     if [[ ${item_mode} == "plain" ]]; then
-        [[ ${format_set} == ${RESULT_FALSE} ]] && format='%-50s \n'
+        [[ ${format_set} == ${RESULT_FALSE} ]] && format='%-50s'
         [[ ${title_set} == ${RESULT_FALSE} ]] && title="ITEM"
     elif [[ ${item_mode} != "path" ]]; then
         devtool_print "${LOG_ERRO}" "Unknown menu item mode: %s" "${item_mode}"
@@ -183,8 +183,10 @@ function FUNC_tui_select(){
     fi
 
     local i=1;
+    devtool_print "${LOG_CORE}" ""
     devtool_print "${LOG_CORE}" "---"
     devtool_print "${LOG_CORE}" "|%-5s|${format}" "No." "${title_columns[@]}"
+    devtool_print "${LOG_CORE}" ""
     for p in ${list[@]}
     do
         case "${item_mode}" in

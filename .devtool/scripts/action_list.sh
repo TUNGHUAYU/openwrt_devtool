@@ -5,9 +5,11 @@ function FUNC_action_list(){
     local count=0
     local type=""
     local pkg_name=""
-    local format="|%-03s|%-30s|%-10s|%-50s \n"
-    local _format="|%-03d|%-30s|%-10s|%-50s \n"
+    local format="|%-03s|%-30s|%-10s|%-50s"
+    local _format="|%-03d|%-30s|%-10s|%-50s"
+    devtool_print "${LOG_CORE}" ""
     devtool_print "${LOG_CORE}" "${format}" "No." "PKG-NAME" "TYPE" "PKG-PATH"
+    devtool_print "${LOG_CORE}" ""
 
     for p in ${NEW_PKG_LIST}
     do

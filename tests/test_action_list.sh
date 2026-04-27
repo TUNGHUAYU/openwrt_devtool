@@ -25,5 +25,20 @@ test_action_list_prints_new_and_modified_packages(){
     assert_contains "${output}" "workspace/PACKAGES/feeds/base/modified_pkg"
 }
 
+test_action_list_uses_compact_row_spacing(){
+    DEVTOOL_DIR="/repo"
+    NEW_PKG_LIST="/repo/workspace/FEEDS/feed_devtool/new_pkg"
+    MOD_PKG_LIST="/repo/workspace/PACKAGES/feeds/base/modified_pkg"
+
+    local output
+    output=$(FUNC_action_list)
+
+    [[ "${output}" == $'\n|No.'* ]] &&
+    [[ "${output}" == *$'PKG-PATH'*$'\n\n|1  '* ]] &&
+    [[ "${output}" == *$'workspace/FEEDS/feed_devtool/new_pkg'*$'\n|2  '* ]] &&
+    [[ "${output}" != *$'workspace/FEEDS/feed_devtool/new_pkg'*$'\n\n|2  '* ]]
+}
+
 test_case "FUNC_action_list prints new and modified packages" test_action_list_prints_new_and_modified_packages
+test_case "FUNC_action_list uses compact row spacing" test_action_list_uses_compact_row_spacing
 finish_tests
