@@ -1,5 +1,21 @@
 History
 
+v3.0.0:
+
+Release the updated workspace and finish workflow.
+
+- Feature
+    - action
+        - finish : Finalize new package Makefiles and sources into `workspace/finished/`.
+        - finish : Generate and move modified package patches back into the OpenWrt package.
+        - patch  : Support package selection without an explicit package pattern.
+- Improve
+    - workspace
+        - Split active work into `workspace/developing/` and completed output into `workspace/finished/`.
+        - Track package metadata without listing `.devtool` internals as packages.
+    - action
+        - modify : Support `ref-base` and `dev` source branches for package modification.
+
 v2.1.0:
 
 Add new feature for new action.

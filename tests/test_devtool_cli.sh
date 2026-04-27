@@ -37,6 +37,7 @@ test_help_prints_pretty_sections(){
 
     assert_help_framed "${output_file}" &&
     assert_contains "${output}" "OpenWrt Devtool" &&
+    assert_contains "${output}" "Version: 3.0.0" &&
     assert_contains "${output}" "Usage: ./devtool.sh <command> [options]" &&
     assert_contains "${output}" "${GREEN}Usage: ./devtool.sh <command> [options]${NC}" &&
     assert_contains "${output}" "Commands:" &&

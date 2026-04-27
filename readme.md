@@ -2,7 +2,7 @@
 
 > author: Terry Yu
 >
-> version: v2.1.x
+> version: v3.0.x
 
 ## Usage
 
