@@ -92,7 +92,7 @@ test_check_pkg_type_detects_modified_package(){
     assert_eq "modify" "${PKG_TYPE}"
 }
 
-test_check_pkg_type_detects_http_package(){
+test_check_pkg_type_detects_remote_git_url(){
     PKG_NAME="remote_pkg"
     URL="https://example.test/repo.git"
     NEW_PKG_LIST=""
@@ -100,7 +100,18 @@ test_check_pkg_type_detects_http_package(){
 
     FUNC_check_pkg_type >/dev/null
 
-    assert_eq "http" "${PKG_TYPE}"
+    assert_eq "remote-git" "${PKG_TYPE}"
+}
+
+test_check_pkg_type_detects_ssh_remote_git_url(){
+    PKG_NAME="remote_pkg"
+    URL="git@example.test:repo.git"
+    NEW_PKG_LIST=""
+    MOD_PKG_LIST=""
+
+    FUNC_check_pkg_type >/dev/null
+
+    assert_eq "remote-git" "${PKG_TYPE}"
 }
 
 test_check_pkg_type_defaults_to_none(){
@@ -121,6 +132,7 @@ test_case "new packages are discovered from feed workspace" test_get_new_pkg_lis
 test_case "modified packages are discovered from package makefiles" test_get_mod_pkg_list_reads_package_makefiles
 test_case "package type detects new package" test_check_pkg_type_detects_new_package
 test_case "package type detects modified package" test_check_pkg_type_detects_modified_package
-test_case "package type detects http package" test_check_pkg_type_detects_http_package
+test_case "package type detects remote git URL" test_check_pkg_type_detects_remote_git_url
+test_case "package type detects ssh remote git URL" test_check_pkg_type_detects_ssh_remote_git_url
 test_case "package type defaults to none" test_check_pkg_type_defaults_to_none
 finish_tests

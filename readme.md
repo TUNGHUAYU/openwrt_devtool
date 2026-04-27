@@ -12,9 +12,9 @@
 
     # New package
     # Type 1: New package from local sample
-    $ bash devtool.sh add <pkg-name> 
-    # Type 2: New package from remote git repository ( only http url allowed )
-    $ bash devtool.sh add <pkg-name> <git-repo-http-url> 
+    $ bash devtool.sh new <pkg-name>
+    # Type 2: New package from remote git repository
+    $ bash devtool.sh new <pkg-name> <git-repo-url>
 
     # Modify existed package 
     $ bash devtool.sh modify [<search-pattern>]
@@ -22,5 +22,3 @@
     # Abort the developing package 
     $ bash devtool.sh abort ${OPENWRT_DIR} ${PKG_NAME} 
 ```
-
-

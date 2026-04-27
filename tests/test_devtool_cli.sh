@@ -63,10 +63,10 @@ test_new_help_prints_argument_details(){
     output=$(<"${output_file}")
 
     assert_help_framed "${output_file}" &&
-    assert_contains "${output}" "Usage: ./devtool.sh new <pkg-name> [<http-url>]" &&
-    assert_contains "${output}" "${GREEN}Usage: ./devtool.sh new <pkg-name> [<http-url>]${NC}" &&
+    assert_contains "${output}" "Usage: ./devtool.sh new <pkg-name> [<git-url>]" &&
+    assert_contains "${output}" "${GREEN}Usage: ./devtool.sh new <pkg-name> [<git-url>]${NC}" &&
     assert_contains "${output}" "<pkg-name>" &&
-    assert_contains "${output}" "[<http-url>]" &&
+    assert_contains "${output}" "[<git-url>]" &&
     assert_contains "${output}" "./devtool.sh new demo_plugin" &&
     assert_contains "${output}" "${GREEN}  ./devtool.sh new demo_plugin${NC}" &&
     assert_contains "${output}" "./devtool.sh new demo_plugin https://example.com/demo.git" &&
@@ -134,8 +134,8 @@ test_new_without_package_prints_new_help(){
 
     assert_status "8" "${status}" &&
     assert_help_framed "${output_file}" &&
-    assert_contains "${output}" "Usage: ./devtool.sh new <pkg-name> [<http-url>]" &&
-    assert_contains "${output}" "${GREEN}Usage: ./devtool.sh new <pkg-name> [<http-url>]${NC}" &&
+    assert_contains "${output}" "Usage: ./devtool.sh new <pkg-name> [<git-url>]" &&
+    assert_contains "${output}" "${GREEN}Usage: ./devtool.sh new <pkg-name> [<git-url>]${NC}" &&
     [[ "${output}" != *"Usage: ./devtool.sh <command> [options]"* ]]
     local assert_status_result=$?
     rm -f "${output_file}"

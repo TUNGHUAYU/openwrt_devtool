@@ -17,8 +17,8 @@ function FUNC_create_new_pkg(){
     FUNC_create_folder "${dir}"
 
     # copy reference Makefile
-    cd "${dir}"
-    cp ${reference_make_path} Makefile
+    cd "${dir}" || return $?
+    cp "${reference_make_path}" Makefile || return $?
 
     # substitute process 
     # todo: move this process into target reference Makefile folder
@@ -44,7 +44,7 @@ function FUNC_create_new_pkg(){
     sed -i "s#<title>#${TITLE}#g"                                      Makefile
     sed -i "s#<description>#${DESCRIPTION}#g"                          Makefile
 
-    cd - > /dev/null
+    cd - > /dev/null || return $?
 }
 
 function FUNC_create_new_pkg_source(){
@@ -66,25 +66,25 @@ function FUNC_create_new_pkg_source(){
     FUNC_create_folder "${dir}"
 
     # copy reference source
-    cd "${dir}"
-    cp -r ${reference_source_path}/. .
+    cd "${dir}" || return $?
+    cp -r "${reference_source_path}/." . || return $?
 
     # go to .translate folder
     if [[ -d .translate/ ]]; then
         cd .translate/
         echo "test: $(pwd)"
-        bash gen_translate_script.sh ${PKG_NAME}
-        bash translate.cmd.sh
-        cd ../
+        bash gen_translate_script.sh ${PKG_NAME} || return $?
+        bash translate.cmd.sh || return $?
+        cd ../ || return $?
     fi
 
     # initial git
-    git init
-    git add . 
-    git commit -m "first commit"
-    git checkout -b dev
+    git init || return $?
+    git add . || return $?
+    git commit -m "first commit" || return $?
+    git checkout -b dev || return $?
     
-    cd - > /dev/null
+    cd - > /dev/null || return $?
 }
 
 function FUNC_create_new_pkg_source_remote(){
@@ -95,12 +95,12 @@ function FUNC_create_new_pkg_source_remote(){
     FUNC_create_folder "${dir}"
 
     # copy reference source
-    cd "${dir}"
+    cd "${dir}" || return $?
     #cp -r ${reference_source_path}/. .
-    git clone ${URL} .
-    git checkout -b dev
+    git clone "${URL}" . || return $?
+    git checkout -B dev || return $?
     
-    cd - > /dev/null
+    cd - > /dev/null || return $?
 }
 
 function FUNC_register_local_feed(){
@@ -122,6 +122,10 @@ function FUNC_register_local_feed(){
     ./scripts/feeds install -p ${FEED_NAME} ${PKG_NAME}
     
     cd - > /dev/null
+}
+
+function FUNC_cleanup_new_pkg_workspace(){
+    rm -rf "${DEVTOOL_SRC_DIR}" "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/${PKG_NAME}"
 }
 
 function FUNC_action_new(){
@@ -146,14 +150,14 @@ function FUNC_action_new(){
             FUNC_register_local_feed
             ;;
         
-        http )
-            FUNC_check_url_is_git_repo ${URL}
+        remote-git )
+            FUNC_check_url_is_git_repo "${URL}"
             if [ "$RESULT" == "$RESULT_NOK" ]; then 
-                exit ${ERROR_NOT_GIT_REPO}
+                return ${ERROR_NOT_GIT_REPO}
             fi
-            FUNC_create_new_pkg
-            FUNC_create_new_pkg_source_remote
-            FUNC_register_local_feed
+            FUNC_create_new_pkg || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
+            FUNC_create_new_pkg_source_remote || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
+            FUNC_register_local_feed || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
             ;;
 
         * )

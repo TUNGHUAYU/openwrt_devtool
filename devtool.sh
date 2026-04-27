@@ -81,11 +81,11 @@ function HELP_LIST(){
 
 function HELP_NEW(){
     HELP_BEGIN
-    HELP_PRINT_GREEN "Usage: ./devtool.sh new <pkg-name> [<http-url>]"
+    HELP_PRINT_GREEN "Usage: ./devtool.sh new <pkg-name> [<git-url>]"
     devtool_print ${LOG_CORE} ""
     devtool_print ${LOG_CORE} "Arguments:"
     devtool_print ${LOG_CORE} "  %-14s %s" "<pkg-name>" "Name of the new package to create."
-    devtool_print ${LOG_CORE} "  %-14s %s" "[<http-url>]" "Optional HTTP-compatible git repository URL to use as source."
+    devtool_print ${LOG_CORE} "  %-14s %s" "[<git-url>]" "Optional Git repository URL to use as source."
     devtool_print ${LOG_CORE} ""
     devtool_print ${LOG_CORE} "Examples:"
     HELP_PRINT_GREEN "  ./devtool.sh new demo_plugin"

@@ -89,9 +89,9 @@ function FUNC_check_pkg_type(){
         fi
     done
 
-    # check if package is in http repository
-    if [[ "${url}" =~ "http" ]]; then
-        PKG_TYPE="http"
+    # check if package source comes from a remote/local Git URL
+    if [[ -n "${url}" ]]; then
+        PKG_TYPE="remote-git"
         return
     fi
 }
