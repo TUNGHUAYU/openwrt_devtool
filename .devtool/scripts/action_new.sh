@@ -4,11 +4,10 @@ function FUNC_create_new_pkg(){
     # tui: reference Makefile selection
     local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-Makefile -iname Makefile* )"
     FUNC_tui_select \
-    "${list}" \
-    "${DEVTOOL_DIR}/.devtool/ref-Makefile/" \
-    "Please select Makefile style:" \
-    "" \
-    "No. Makefile-Type Makefile-Path"
+        "${list}" \
+        --search-path "${DEVTOOL_DIR}/.devtool/ref-Makefile/" \
+        --message "Please select Makefile style:" \
+        --title "MAKEFILE STYLE|MAKEFILE PATH"
 
     local reference_make_path=${RESULT}
 
@@ -54,11 +53,10 @@ function FUNC_create_new_pkg_source(){
     local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-sources/ -mindepth 1 -maxdepth 1 -type d  )"
 
     FUNC_tui_select \
-    "${list}" \
-    "${DEVTOOL_DIR}/.devtool/ref-sources/" \
-    "Please select sample source:" \
-    "" \
-    "No. Source_Name Source-Path"
+        "${list}" \
+        --search-path "${DEVTOOL_DIR}/.devtool/ref-sources/" \
+        --message "Please select sample source:" \
+        --title "SOURCE|SOURCE PATH"
 
     local reference_source_path=${RESULT}
 

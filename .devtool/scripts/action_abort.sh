@@ -78,9 +78,9 @@ function FUNC_action_abort(){
     # tui: package selection
     local list="${NEW_PKG_LIST} ${MOD_PKG_LIST}"
     FUNC_tui_select \
-    "${list}" \
-    "${DEVTOOL_DIR}/" \
-    "Please select package to abort:"
+        "${list}" \
+        --search-path "${DEVTOOL_DIR}/" \
+        --message "Please select package to abort:"
 
     PKG_NAME=${RESULT##*/}
 

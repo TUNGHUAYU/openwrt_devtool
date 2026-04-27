@@ -85,37 +85,122 @@ function FUNC_create_folder(){
 }
 
 
-# TUI: list options filtering by given pattern and assign value to the specific 
+# TUI: list options and assign the selected value to RESULT.
 # usage:
-# $1: list          : list all options
-# $2: search_path   : target search path
-# $3: message       : tui message
-# $4: format        : title format 
-# $5: title         : manual title
+# FUNC_tui_select "<items>" \
+#   --search-path "<path-prefix>" \
+#   --message "<prompt>" \
+#   --format "<printf-format>" \
+#   --title "<header columns>" \
+#   --item-mode path|plain
 function FUNC_tui_select(){
-    local list=($1)
-    local search_path=$2
-    local message=$3
-    local format=${4:-'%-30s|%-50s \n'}
-    local title=${6:-"PKG-NAME PKG-PATH"}
+    local raw_list=$1
+    local list=(${raw_list})
+    local search_path=""
+    local message="Please select:"
+    local format='%-30s|%-50s \n'
+    local title="PKG-NAME PKG-PATH"
+    local title_columns=()
+    local item_mode="path"
+    local format_set=${RESULT_FALSE}
+    local title_set=${RESULT_FALSE}
+    local selected=""
+    local display_name=""
+    local display_path=""
 
-    #
-    [[ ${#list[@]} == 0 ]] && \
-    devtool_print "${LOG_CORE}" "No matching package!!" && \
-    exit ${ERROR_NO_MATCHING_PKG}
+    shift
+    if [[ ${1:-} == --* ]]; then
+        while [[ $# -gt 0 ]]
+        do
+            case "$1" in
+                --search-path)
+                    [[ $# -lt 2 ]] && devtool_print "${LOG_ERRO}" "Missing value for menu option: %s" "$1" && RESULT="" && return ${ERROR_ILLEGAL_COMMAND}
+                    search_path=$2
+                    shift 2
+                    ;;
+                --message)
+                    [[ $# -lt 2 ]] && devtool_print "${LOG_ERRO}" "Missing value for menu option: %s" "$1" && RESULT="" && return ${ERROR_ILLEGAL_COMMAND}
+                    message=$2
+                    shift 2
+                    ;;
+                --format)
+                    [[ $# -lt 2 ]] && devtool_print "${LOG_ERRO}" "Missing value for menu option: %s" "$1" && RESULT="" && return ${ERROR_ILLEGAL_COMMAND}
+                    format=$2
+                    format_set=${RESULT_TRUE}
+                    shift 2
+                    ;;
+                --title)
+                    [[ $# -lt 2 ]] && devtool_print "${LOG_ERRO}" "Missing value for menu option: %s" "$1" && RESULT="" && return ${ERROR_ILLEGAL_COMMAND}
+                    title=$2
+                    title_set=${RESULT_TRUE}
+                    shift 2
+                    ;;
+                --item-mode)
+                    [[ $# -lt 2 ]] && devtool_print "${LOG_ERRO}" "Missing value for menu option: %s" "$1" && RESULT="" && return ${ERROR_ILLEGAL_COMMAND}
+                    item_mode=$2
+                    shift 2
+                    ;;
+                *)
+                    devtool_print "${LOG_ERRO}" "Unknown menu option: %s" "$1"
+                    RESULT=""
+                    return ${ERROR_ILLEGAL_COMMAND}
+                    ;;
+            esac
+        done
+    else
+        search_path=${1:-}
+        message=${2:-${message}}
+        format=${3:-${format}}
+        title=${4:-${5:-${title}}}
+    fi
+
+    if [[ ${item_mode} == "plain" ]]; then
+        [[ ${format_set} == ${RESULT_FALSE} ]] && format='%-50s \n'
+        [[ ${title_set} == ${RESULT_FALSE} ]] && title="ITEM"
+    elif [[ ${item_mode} != "path" ]]; then
+        devtool_print "${LOG_ERRO}" "Unknown menu item mode: %s" "${item_mode}"
+        RESULT=""
+        return ${ERROR_ILLEGAL_COMMAND}
+    fi
+    if [[ ${title} == *"|"* ]]; then
+        IFS='|' read -r -a title_columns <<< "${title}"
+    else
+        read -r -a title_columns <<< "${title}"
+    fi
+
+    if [[ ${#list[@]} -eq 0 ]]; then
+        devtool_print "${LOG_CORE}" "No matching package!!"
+        RESULT=""
+        return ${ERROR_NO_MATCHING_PKG}
+    fi
 
     # TUI: List
     
-    echo ""
-    echo "search_path: ${search_path}"
-    echo ""
+    if [[ ${item_mode} == "path" ]]; then
+        echo ""
+        echo "search_path: ${search_path}"
+        echo ""
+    fi
 
     local i=1;
     devtool_print "${LOG_CORE}" "---"
-    devtool_print "${LOG_CORE}" "|%-5s|${format}" "No." ${title}
+    devtool_print "${LOG_CORE}" "|%-5s|${format}" "No." "${title_columns[@]}"
     for p in ${list[@]}
     do
-        devtool_print "${LOG_CORE}" "|%-5d|${format}" "${i}" "${p##*/}" "${p/${search_path}/\$\{search_path\}\/}"
+        case "${item_mode}" in
+            plain)
+                devtool_print "${LOG_CORE}" "|%-5d|${format}" "${i}" "${p}"
+                ;;
+            path)
+                display_name="${p##*/}"
+                if [[ -n ${search_path} ]]; then
+                    display_path="${p/${search_path}/\$\{search_path\}\/}"
+                else
+                    display_path="${p}"
+                fi
+                devtool_print "${LOG_CORE}" "|%-5d|${format}" "${i}" "${display_name}" "${display_path}"
+                ;;
+        esac
         i=$((i+1))
     done
     devtool_print "${LOG_CORE}" "---"
@@ -126,11 +211,23 @@ function FUNC_tui_select(){
     read -e -p "Select: "
     local index=$((${REPLY}-1))
 
+    if [[ ! ${REPLY} =~ ^[0-9]+$ ]] || [[ ${index} -lt 0 ]] || [[ ${index} -ge ${#list[@]} ]]; then
+        devtool_print "${LOG_ERRO}" "Invalid selection: %s" "${REPLY}"
+        RESULT=""
+        return ${ERROR_ILLEGAL_COMMAND}
+    fi
+
+    selected=${list[${index}]}
+
     echo 
-    echo "Select: ${list[${index}]/${search_path}/}"
+    if [[ ${item_mode} == "path" ]] && [[ -n ${search_path} ]]; then
+        echo "Select: ${selected/${search_path}/}"
+    else
+        echo "Select: ${selected}"
+    fi
     echo 
 
-    RESULT=${list[${index}]}
+    RESULT=${selected}
 }
 
 

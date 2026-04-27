@@ -27,12 +27,9 @@ function FUNC_patch_select_pkg(){
     fi
 
     FUNC_tui_select \
-    "${match_list}" \
-    "${DEVTOOL_WORKSPACE_PKG_DIR}/" \
-    "Please select package to patch:" \
-    "" \
-    "" \
-    ""
+        "${match_list}" \
+        --search-path "${DEVTOOL_WORKSPACE_PKG_DIR}/" \
+        --message "Please select package to patch:"
 }
 
 function FUNC_patch_list_candidates(){

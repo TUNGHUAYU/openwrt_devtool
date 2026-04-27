@@ -405,12 +405,9 @@ function FUNC_action_modify(){
     # tui: package selection
     local list="$( find -L ${OPENWRT_DIR}/package/feeds/ -iname makefile | grep "${PKG_NAME_PATTERN}" | sed 's|/Makefile$||' )"
     FUNC_tui_select \
-    "${list}" \
-    "${OPENWRT_DIR}/package/feeds/" \
-    "Please select package to modify:" \
-    "" \
-    "" \
-    ""
+        "${list}" \
+        --search-path "${OPENWRT_DIR}/package/feeds/" \
+        --message "Please select package to modify:"
 
     OPENWRT_PKG_DIR=${RESULT}
     echo "OPENWRT_PKG_DIR: ${OPENWRT_PKG_DIR}"

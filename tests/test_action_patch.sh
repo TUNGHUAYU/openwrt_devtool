@@ -40,7 +40,7 @@ test_patch_action_generates_openwrt_patch_impl(){
     create_patch_fixture "${tmpdir}"
 
     local output
-    output=$(FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}")
+    output=$(printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}")
 
     local patch_file
     patch_file=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches" -maxdepth 1 -name '001-*.patch' -type f)
@@ -65,7 +65,7 @@ test_patch_action_replaces_stale_existing_patch_impl(){
     touch "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches/001-existing.patch"
     touch "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches/README"
 
-    FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
 
     local patch_dir="${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches"
     local patch_file
@@ -84,8 +84,8 @@ test_patch_action_rerun_does_not_duplicate_patch_impl(){
     local tmpdir=$1
     create_patch_fixture "${tmpdir}"
 
-    FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
-    FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" "${BASE_REF}" >/dev/null
 
     local patch_count
     patch_count=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches" -maxdepth 1 -name '*.patch' -type f | wc -l)
@@ -106,7 +106,7 @@ test_patch_action_requires_source_git_repo_impl(){
     DEVTOOL_WORKSPACE_SRC_DIR="${tmpdir}/workspace/SOURCES"
     MOD_PKG_LIST="${pkg_dir}"
 
-    FUNC_action_patch "demo_pkg" "HEAD" >/dev/null
+    printf "1\n" | FUNC_action_patch "demo_pkg" "HEAD" >/dev/null
     local status=$?
 
     assert_status "${ERROR_FILE_NO_EXIST}" "${status}"
@@ -120,7 +120,7 @@ test_patch_action_defaults_to_ref_base_impl(){
     local tmpdir=$1
     create_patch_fixture "${tmpdir}"
 
-    FUNC_action_patch "${PKG_PATTERN}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" >/dev/null
 
     local patch_file
     patch_file=$(find "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/feed_prplos/demo_pkg/patches" -maxdepth 1 -name '001-*.patch' -type f)
@@ -146,7 +146,7 @@ test_patch_action_uses_makefile_source_version_as_base_impl(){
     git -C "${src_dir}" branch -f dev >/dev/null
     printf "PKG_SOURCE_VERSION:=custom-base\n" > "${pkg_dir}/Makefile"
 
-    FUNC_action_patch "${PKG_PATTERN}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" >/dev/null
 
     local patch_file
     patch_file=$(find "${pkg_dir}/patches" -maxdepth 1 -name '*.patch' -type f)
@@ -166,7 +166,7 @@ test_patch_action_uses_dev_branch_when_head_elsewhere_impl(){
 
     git -C "${src_dir}" checkout ref-base >/dev/null 2>&1
 
-    FUNC_action_patch "${PKG_PATTERN}" >/dev/null
+    printf "1\n" | FUNC_action_patch "${PKG_PATTERN}" >/dev/null
 
     local patch_file
     patch_file=$(find "${pkg_dir}/patches" -maxdepth 1 -name '001-*.patch' -type f)
