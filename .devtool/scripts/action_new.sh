@@ -43,7 +43,6 @@ function FUNC_create_new_pkg(){
     sed -i "s#<submenu>#${SUBMENU}#g"                                  Makefile
     sed -i "s#<title>#${TITLE}#g"                                      Makefile
     sed -i "s#<description>#${DESCRIPTION}#g"                          Makefile
-    FUNC_write_pkg_metadata "${dir}" "new-sample" "${FEED_NAME}/${PKG_NAME}" "sample"
 
     cd - > /dev/null || return $?
 }
@@ -157,7 +156,6 @@ function FUNC_action_new(){
                 return ${ERROR_NOT_GIT_REPO}
             fi
             FUNC_create_new_pkg || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
-            FUNC_write_pkg_metadata "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/${PKG_NAME}" "new-git" "${FEED_NAME}/${PKG_NAME}" "git:${URL}"
             FUNC_create_new_pkg_source_remote || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
             FUNC_register_local_feed || { local status=$?; FUNC_cleanup_new_pkg_workspace; return ${status}; }
             ;;

@@ -139,6 +139,7 @@ test_new_action_generates_prebuilt_template_impl(){
     assert_contains "${makefile}" "PKG_NAME:=prebuilt_demo" &&
     assert_contains "${makefile}" "Build/Compile:=:" &&
     assert_contains "${makefile}" '$(CP) $(PKG_BUILD_DIR)/usr/* $(1)/usr/' &&
+    [[ ! -e "${pkg_dir}/.devtool" ]] &&
     [[ -x "${src_dir}/usr/bin/hello-prebuilt" ]]
 }
 
@@ -166,6 +167,7 @@ test_new_action_generates_python3_template_impl(){
     assert_contains "${makefile}" "PYTHON3_PKG_SETUP_DIR:=" &&
     assert_contains "${makefile}" "PYTHON3_PKG_WHEEL_NAME:=hello_openwrt" &&
     assert_contains "${makefile}" '$(eval $(call Py3Package,$(PKG_NAME)))' &&
+    [[ ! -e "${pkg_dir}/.devtool" ]] &&
     [[ -f "${src_dir}/pyproject.toml" ]] &&
     [[ -f "${src_dir}/hello_openwrt/__init__.py" ]]
 }

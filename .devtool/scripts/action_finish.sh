@@ -150,6 +150,7 @@ function FUNC_finish_modify_pkg(){
 function FUNC_action_finish(){
     local pkg_pattern=${1:-}
     local dry_run=${2:-}
+    local status=${RESULT_OK}
 
     FUNC_finish_select_package "${pkg_pattern}" || return $?
     SELECTED_PKG_DIR=${RESULT}
@@ -175,13 +176,21 @@ function FUNC_action_finish(){
     case "${DEVTOOL_PACKAGE_KIND}" in
         new-sample|new-git)
             FUNC_finish_new_pkg "${dry_run}"
+            status=$?
             ;;
         modify)
             FUNC_finish_modify_pkg "${dry_run}"
+            status=$?
             ;;
         *)
             devtool_print "${LOG_ERRO}" "ERROR: unsupported package type: %s" "${DEVTOOL_PACKAGE_KIND}"
             return ${ERROR_ILLEGAL_COMMAND}
             ;;
     esac
+
+    if [[ ${status} -eq ${RESULT_OK} && "${dry_run}" != "--dry-run" ]]; then
+        FUNC_prune_empty_workspace_dirs
+    fi
+
+    return ${status}
 }
