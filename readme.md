@@ -32,6 +32,10 @@ Completed new package work is moved under `workspace/finished/`.
 - `FEEDS/`: finished package Makefiles.
 - `SOURCES/`: finished source trees.
 
+When the configured OpenWrt tree is available, devtool also maintains a local
+`codebase` symlink that points to that tree. This makes the current OpenWrt
+checkout easy to inspect without committing machine-local paths.
+
 ## List Active Work
 
 List new and modified packages currently tracked by devtool.
@@ -56,6 +60,11 @@ Devtool prompts for a Makefile style and sample source, then creates:
 workspace/developing/FEEDS/feed_devtool/<pkg-name>/Makefile
 workspace/developing/SOURCES/<pkg-name>/
 ```
+
+Reference templates include common OpenWrt package styles such as CMake,
+autotools, Meson, plain Make, Python 3 modules, files-only packages, and
+prebuilt-artifact installers. Matching hello-world source trees live under
+`.devtool/ref-sources/`.
 
 Create a package from a Git repository URL.
 

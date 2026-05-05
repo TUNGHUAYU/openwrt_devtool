@@ -40,6 +40,54 @@ test_missing_openwrt_dir_sets_false(){
     assert_eq "${RESULT_FALSE}" "${RESULT}"
 }
 
+test_link_openwrt_codebase_creates_symlink_impl(){
+    local tmpdir=$1
+    DEVTOOL_DIR="${tmpdir}/devtool"
+    OPENWRT_DIR="${tmpdir}/openwrt"
+    mkdir -p "${DEVTOOL_DIR}" "${OPENWRT_DIR}"
+
+    FUNC_link_openwrt_codebase >/dev/null || return $?
+
+    [[ -L "${DEVTOOL_DIR}/codebase" ]] &&
+    assert_eq "${OPENWRT_DIR}" "$(readlink "${DEVTOOL_DIR}/codebase")"
+}
+
+test_link_openwrt_codebase_creates_symlink(){
+    with_temp_repo test_link_openwrt_codebase_creates_symlink_impl
+}
+
+test_link_openwrt_codebase_updates_existing_symlink_impl(){
+    local tmpdir=$1
+    DEVTOOL_DIR="${tmpdir}/devtool"
+    OPENWRT_DIR="${tmpdir}/openwrt-new"
+    mkdir -p "${DEVTOOL_DIR}" "${tmpdir}/openwrt-old" "${OPENWRT_DIR}"
+    ln -s "${tmpdir}/openwrt-old" "${DEVTOOL_DIR}/codebase"
+
+    FUNC_link_openwrt_codebase >/dev/null || return $?
+
+    assert_eq "${OPENWRT_DIR}" "$(readlink "${DEVTOOL_DIR}/codebase")"
+}
+
+test_link_openwrt_codebase_updates_existing_symlink(){
+    with_temp_repo test_link_openwrt_codebase_updates_existing_symlink_impl
+}
+
+test_link_openwrt_codebase_skips_non_symlink_impl(){
+    local tmpdir=$1
+    DEVTOOL_DIR="${tmpdir}/devtool"
+    OPENWRT_DIR="${tmpdir}/openwrt"
+    mkdir -p "${DEVTOOL_DIR}/codebase" "${OPENWRT_DIR}"
+
+    FUNC_link_openwrt_codebase >/dev/null || return $?
+
+    [[ -d "${DEVTOOL_DIR}/codebase" ]] &&
+    [[ ! -L "${DEVTOOL_DIR}/codebase" ]]
+}
+
+test_link_openwrt_codebase_skips_non_symlink(){
+    with_temp_repo test_link_openwrt_codebase_skips_non_symlink_impl
+}
+
 test_path_config_uses_developing_and_finished_layout(){
     local old_devtool_dir=${DEVTOOL_DIR:-}
     local old_openwrt_dir=${OPENWRT_DIR:-}
@@ -181,6 +229,9 @@ test_check_pkg_type_defaults_to_none(){
 test_case "empty OPENWRT_DIR sets RESULT_FALSE" test_empty_openwrt_dir_sets_false
 test_case "existing OPENWRT_DIR sets RESULT_TRUE" test_existing_openwrt_dir_sets_true
 test_case "missing OPENWRT_DIR sets RESULT_FALSE" test_missing_openwrt_dir_sets_false
+test_case "codebase symlink is created for available OpenWrt tree" test_link_openwrt_codebase_creates_symlink
+test_case "codebase symlink is updated when OpenWrt tree changes" test_link_openwrt_codebase_updates_existing_symlink
+test_case "codebase symlink skips non-symlink path" test_link_openwrt_codebase_skips_non_symlink
 test_case "path config uses developing and finished workspace layout" test_path_config_uses_developing_and_finished_layout
 test_case "new packages are discovered from feed workspace" test_get_new_pkg_list_reads_feed_workspace
 test_case "new package discovery ignores metadata directories" test_get_new_pkg_list_ignores_metadata_dirs
