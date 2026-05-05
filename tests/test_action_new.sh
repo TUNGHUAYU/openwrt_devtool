@@ -120,7 +120,63 @@ test_new_action_remote_setup_failure_cleans_workspace(){
     with_temp_repo test_new_action_remote_setup_failure_cleans_workspace_impl
 }
 
+test_new_action_generates_prebuilt_template_impl(){
+    local tmpdir=$1
+    create_openwrt_feed_fixture "${tmpdir}"
+
+    local prebuilt_index
+    prebuilt_index=$(find -L "${ROOT_DIR}/.devtool/ref-Makefile" -iname "Makefile*" | sort | nl -ba | awk '/Makefile.prebuilt-artifacts.generic/ {print $1}')
+    local source_index
+    source_index=$(find -L "${ROOT_DIR}/.devtool/ref-sources" -mindepth 1 -maxdepth 1 -type d | sort | nl -ba | awk '/prebuilt_hello-artifacts/ {print $1}')
+
+    printf "%s\n%s\n" "${prebuilt_index}" "${source_index}" | FUNC_action_new "prebuilt_demo" >/dev/null 2>&1
+
+    local src_dir="${DEVTOOL_WORKSPACE_SRC_DIR}/prebuilt_demo"
+    local pkg_dir="${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/prebuilt_demo"
+    local makefile
+    makefile=$(cat "${pkg_dir}/Makefile")
+
+    assert_contains "${makefile}" "PKG_NAME:=prebuilt_demo" &&
+    assert_contains "${makefile}" "Build/Compile:=:" &&
+    assert_contains "${makefile}" '$(CP) $(PKG_BUILD_DIR)/usr/* $(1)/usr/' &&
+    [[ -x "${src_dir}/usr/bin/hello-prebuilt" ]]
+}
+
+test_new_action_generates_prebuilt_template(){
+    with_temp_repo test_new_action_generates_prebuilt_template_impl
+}
+
+test_new_action_generates_python3_template_impl(){
+    local tmpdir=$1
+    create_openwrt_feed_fixture "${tmpdir}"
+
+    local python_index
+    python_index=$(find -L "${ROOT_DIR}/.devtool/ref-Makefile" -iname "Makefile*" | sort | nl -ba | awk '/Makefile.python3-module.generic/ {print $1}')
+    local source_index
+    source_index=$(find -L "${ROOT_DIR}/.devtool/ref-sources" -mindepth 1 -maxdepth 1 -type d | sort | nl -ba | awk '/python3_hello-module/ {print $1}')
+
+    printf "%s\n%s\n" "${python_index}" "${source_index}" | FUNC_action_new "python_demo" >/dev/null 2>&1
+
+    local src_dir="${DEVTOOL_WORKSPACE_SRC_DIR}/python_demo"
+    local pkg_dir="${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/python_demo"
+    local makefile
+    makefile=$(cat "${pkg_dir}/Makefile")
+
+    assert_contains "${makefile}" "PKG_NAME:=python_demo" &&
+    assert_contains "${makefile}" "PYTHON3_PKG_SETUP_DIR:=" &&
+    assert_contains "${makefile}" "PYTHON3_PKG_WHEEL_NAME:=hello_openwrt" &&
+    assert_contains "${makefile}" '$(eval $(call Py3Package,$(PKG_NAME)))' &&
+    [[ -f "${src_dir}/pyproject.toml" ]] &&
+    [[ -f "${src_dir}/hello_openwrt/__init__.py" ]]
+}
+
+test_new_action_generates_python3_template(){
+    with_temp_repo test_new_action_generates_python3_template_impl
+}
+
 test_case "new action remote file URL creates dev source" test_new_action_remote_file_url_creates_dev_source
 test_case "new action invalid remote cleans workspace" test_new_action_invalid_remote_cleans_workspace
 test_case "new action remote setup failure cleans workspace" test_new_action_remote_setup_failure_cleans_workspace
+test_case "new action generates prebuilt template and source" test_new_action_generates_prebuilt_template
+test_case "new action generates python3 template and source" test_new_action_generates_python3_template
 finish_tests

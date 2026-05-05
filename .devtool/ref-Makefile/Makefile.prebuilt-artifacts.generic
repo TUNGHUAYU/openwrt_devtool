@@ -1,0 +1,37 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=<pkg-name>
+PKG_VERSION:=0.1
+PKG_RELEASE:=1
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=file://<local-repo-url>
+PKG_SOURCE_VERSION:=<repo-branch>
+PKG_MIRROR_HASH:=skip
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+  SECTION:=utils
+  CATEGORY:=<category>
+  SUBMENU:=<submenu>
+  TITLE:=<title>
+endef
+
+define Package/$(PKG_NAME)/description
+  <description>
+endef
+
+Build/Compile:=:
+Build/Install:=:
+
+define Package/$(PKG_NAME)/install
+	$(INSTALL_DIR) $(1)/usr
+	$(CP) $(PKG_BUILD_DIR)/usr/* $(1)/usr/
+	if [ -d "$(PKG_BUILD_DIR)/etc" ]; then \
+		$(INSTALL_DIR) $(1)/etc; \
+		$(CP) $(PKG_BUILD_DIR)/etc/* $(1)/etc/; \
+	fi
+endef
+
+$(eval $(call BuildPackage,$(PKG_NAME)))

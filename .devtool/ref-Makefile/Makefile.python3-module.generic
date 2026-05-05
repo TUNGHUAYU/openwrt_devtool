@@ -1,0 +1,33 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=<pkg-name>
+PKG_VERSION:=0.1.0
+PKG_RELEASE:=1
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=file://<local-repo-url>
+PKG_SOURCE_VERSION:=<repo-branch>
+PKG_MIRROR_HASH:=skip
+
+PYTHON3_PKG_SETUP_DIR:=
+PYTHON3_PKG_WHEEL_NAME:=hello_openwrt
+PYTHON3_PKG_WHEEL_VERSION:=0.1.0
+
+include $(INCLUDE_DIR)/package.mk
+include $(TOPDIR)/feeds/packages/lang/python/python3-package.mk
+
+define Package/$(PKG_NAME)
+  SECTION:=lang
+  CATEGORY:=Languages
+  SUBMENU:=Python
+  TITLE:=<title>
+  DEPENDS:=+python3-light
+endef
+
+define Package/$(PKG_NAME)/description
+  <description>
+endef
+
+$(eval $(call Py3Package,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME)-src))

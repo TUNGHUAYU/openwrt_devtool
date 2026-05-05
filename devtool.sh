@@ -184,6 +184,7 @@ exit ${ERROR_GIT_CONF}
 
 # update ${DEVTOOL_DIR}/.openwrt_dir 
 FUNC_remember_openwrt_dir
+FUNC_link_openwrt_codebase
 
 # Capture all devtool packages 
 FUNC_get_new_pkg_list

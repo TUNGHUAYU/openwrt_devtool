@@ -37,6 +37,26 @@ FUNC_remember_openwrt_dir(){
     fi
 }
 
+function FUNC_link_openwrt_codebase(){
+    local link_path="${DEVTOOL_DIR}/codebase"
+
+    if [[ -z ${OPENWRT_DIR:-} || ! -d ${OPENWRT_DIR} ]]; then
+        devtool_print "${LOG_WARN}" "Skip codebase link: OPENWRT_DIR is unavailable"
+        return ${RESULT_OK}
+    fi
+
+    if [[ -e "${link_path}" && ! -L "${link_path}" ]]; then
+        devtool_print "${LOG_WARN}" "Skip codebase link: ${link_path} exists and is not a symlink"
+        return ${RESULT_OK}
+    fi
+
+    if [[ -L "${link_path}" ]] && [[ "$(readlink "${link_path}")" == "${OPENWRT_DIR}" ]]; then
+        return ${RESULT_OK}
+    fi
+
+    ln -sfn "${OPENWRT_DIR}" "${link_path}"
+}
+
 
 function FUNC_get_new_pkg_list(){
     local new_pkg_list=""

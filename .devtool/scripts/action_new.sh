@@ -2,7 +2,7 @@
 function FUNC_create_new_pkg(){
 
     # tui: reference Makefile selection
-    local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-Makefile -iname Makefile* )"
+    local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-Makefile -iname Makefile* | sort )"
     FUNC_tui_select \
         "${list}" \
         --search-path "${DEVTOOL_DIR}/.devtool/ref-Makefile/" \
@@ -51,7 +51,7 @@ function FUNC_create_new_pkg(){
 function FUNC_create_new_pkg_source(){
 
     # tui: reference source selection
-    local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-sources/ -mindepth 1 -maxdepth 1 -type d  )"
+    local list="$( find -L ${DEVTOOL_DIR}/.devtool/ref-sources/ -mindepth 1 -maxdepth 1 -type d | sort )"
 
     FUNC_tui_select \
         "${list}" \
@@ -133,7 +133,7 @@ function FUNC_action_new(){
 
     # variables
     PKG_NAME=$1
-    URL=$2
+    URL=${2:-}
     
     # Determin PKG_TYPE
     FUNC_check_pkg_type ${URL}

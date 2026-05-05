@@ -1,0 +1,31 @@
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=<pkg-name>
+PKG_VERSION:=0.1
+PKG_RELEASE:=1
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=file://<local-repo-url>
+PKG_SOURCE_VERSION:=<repo-branch>
+PKG_MIRROR_HASH:=skip
+
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/meson.mk
+
+define Package/$(PKG_NAME)
+  SECTION:=utils
+  CATEGORY:=<category>
+  SUBMENU:=<submenu>
+  TITLE:=<title>
+endef
+
+define Package/$(PKG_NAME)/description
+  <description>
+endef
+
+define Package/$(PKG_NAME)/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/hello-meson $(1)/usr/bin/$(PKG_NAME)
+endef
+
+$(eval $(call BuildPackage,$(PKG_NAME)))
