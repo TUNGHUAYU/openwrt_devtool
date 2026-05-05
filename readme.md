@@ -2,7 +2,7 @@
 
 > author: Terry Yu
 >
-> version: v3.0.x
+> version: v3.1.x
 
 ## Usage
 
@@ -137,6 +137,9 @@ bash devtool.sh finish <pkg-pattern>
 ```
 
 For modified packages, devtool generates patches, restores the original OpenWrt package directory, moves generated patches into the OpenWrt package `patches/` directory, and removes the active devtool workspace entries.
+
+After a successful non-dry-run finish, devtool prunes empty workspace folders
+below the protected `workspace/<phase>/<type>/` layout.
 
 Preview finish steps without changing state.
 

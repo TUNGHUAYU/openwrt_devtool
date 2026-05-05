@@ -1,5 +1,25 @@
 History
 
+v3.1.0:
+
+Expand package template coverage and clean up finished workspace state.
+
+- Feature
+    - action
+        - new    : Add OpenWrt Makefile templates for prebuilt artifacts,
+                   Python 3 modules, Meson, plain Make, and files-only packages.
+        - new    : Add matching hello-world source trees for the expanded
+                   Makefile templates.
+    - workspace
+        - system : Maintain a local `codebase` symlink to the configured
+                   OpenWrt tree when available.
+- Improve
+    - action
+        - finish : Prune empty workspace directories below the protected
+                   workspace layout after successful finish operations.
+        - new    : Stop writing `.devtool` metadata into new-package FEED
+                   directories.
+
 v3.0.0:
 
 Release the updated workspace and finish workflow.

@@ -30,6 +30,11 @@ For script changes, run `bash tests/run_tests.sh` and the Bash syntax check. For
 
 Recent commits use bracketed prefixes such as `[FIX][system]`, `[ENH][system]`, `[FEAT][new]`, and `[DOC]`. Keep commits focused on one behavior change. Pull requests should describe the affected command path, manual commands run, OpenWrt workspace impact, and any template changes.
 
+When tagging a new version, synchronize release documentation in the same work:
+update `history.md` with the version history and update `readme.md` for the new
+version. If `history.md` is already behind the current codebase when you notice
+it, synchronize `history.md` before continuing release work.
+
 ## Security & Configuration Tips
 
 Do not commit `.openwrt_dir`, private repository URLs, credentials, or generated build output. Treat `workspace/` as disposable local state unless intentionally updating a sample. Remote package creation expects Git repository URLs; local `file://` repositories are useful for tests.
