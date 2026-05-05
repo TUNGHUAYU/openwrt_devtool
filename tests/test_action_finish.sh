@@ -104,7 +104,10 @@ test_finish_new_package_moves_makefile_to_finished_feed_impl(){
     [[ ! -e "${workspace_makefile}" ]] &&
     [[ ! -e "${workspace_pkg_dir}" ]] &&
     assert_contains "$(cat "${finished_source_file}")" "demo source" &&
-    [[ ! -e "${workspace_source_dir}" ]]
+    [[ ! -e "${workspace_source_dir}" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_FEED_DIR}" ]] &&
+    [[ ! -e "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_SRC_DIR}" ]]
 }
 
 test_finish_new_package_moves_makefile_to_finished_feed(){
@@ -130,7 +133,8 @@ test_finish_new_package_dry_run_does_not_move_makefile_impl(){
     [[ ! -e "${finished_makefile}" ]] &&
     [[ -e "${workspace_makefile}" ]] &&
     [[ ! -e "${finished_source_dir}" ]] &&
-    [[ -e "${workspace_source_dir}" ]]
+    [[ -e "${workspace_source_dir}" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}" ]]
 }
 
 test_finish_new_package_dry_run_does_not_move_makefile(){
@@ -152,7 +156,27 @@ test_finish_modify_package_restores_openwrt_and_moves_patches_impl(){
     assert_contains "${patch_file}" "001-add-feature.patch" &&
     [[ ! -e "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds/base/demo_mod" ]] &&
     [[ ! -e "${DEVTOOL_WORKSPACE_ORIPKG_DIR}/feeds/base/demo_mod" ]] &&
-    [[ ! -e "${DEVTOOL_WORKSPACE_SRC_DIR}/demo_mod" ]]
+    [[ ! -e "${DEVTOOL_WORKSPACE_SRC_DIR}/demo_mod" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_PKG_DIR}" ]] &&
+    [[ ! -e "${DEVTOOL_WORKSPACE_PKG_DIR}/feeds" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_ORIPKG_DIR}" ]] &&
+    [[ ! -e "${DEVTOOL_WORKSPACE_ORIPKG_DIR}/feeds" ]] &&
+    [[ -d "${DEVTOOL_WORKSPACE_SRC_DIR}" ]]
+}
+
+test_finish_new_package_without_metadata_uses_fallback_impl(){
+    local tmpdir=$1
+    create_finish_new_fixture "${tmpdir}"
+    rm -rf "${DEVTOOL_WORKSPACE_FEED_DIR}/${FEED_NAME}/demo_pkg/.devtool"
+
+    FUNC_action_finish "demo_pkg" >/dev/null
+
+    local finished_makefile="${DEVTOOL_FINISHED_FEED_DIR}/${FEED_NAME}/demo_pkg/Makefile"
+    assert_contains "$(cat "${finished_makefile}")" "PKG_NAME:=demo_pkg"
+}
+
+test_finish_new_package_without_metadata_uses_fallback(){
+    with_temp_repo test_finish_new_package_without_metadata_uses_fallback_impl
 }
 
 test_finish_modify_package_restores_openwrt_and_moves_patches(){
@@ -177,5 +201,6 @@ test_finish_no_pattern_shows_menu(){
 test_case "finish new package moves Makefile to finished feed" test_finish_new_package_moves_makefile_to_finished_feed
 test_case "finish new package dry-run does not move Makefile" test_finish_new_package_dry_run_does_not_move_makefile
 test_case "finish modify package restores OpenWrt and moves patches" test_finish_modify_package_restores_openwrt_and_moves_patches
+test_case "finish new package works without feed metadata" test_finish_new_package_without_metadata_uses_fallback
 test_case "finish without pattern shows package menu" test_finish_no_pattern_shows_menu
 finish_tests

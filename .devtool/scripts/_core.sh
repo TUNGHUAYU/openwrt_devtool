@@ -57,6 +57,14 @@ function FUNC_link_openwrt_codebase(){
     ln -sfn "${OPENWRT_DIR}" "${link_path}"
 }
 
+function FUNC_prune_empty_workspace_dirs(){
+    if [[ -z ${DEVTOOL_WORKSPACE_DIR:-} || ! -d ${DEVTOOL_WORKSPACE_DIR} ]]; then
+        return ${RESULT_OK}
+    fi
+
+    find "${DEVTOOL_WORKSPACE_DIR}" -mindepth 3 -depth -type d -empty -delete
+}
+
 
 function FUNC_get_new_pkg_list(){
     local new_pkg_list=""
